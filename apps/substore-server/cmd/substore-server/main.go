@@ -215,8 +215,8 @@ func (s *Server) executePipeline(sink *substoreserver.SubscriptionSink, sources 
 		})
 	}
 
-	if err := ctx.Define("sources", sourceList); err != nil {
-		return nil, fmt.Errorf("failed to define sources: %v", err)
+	if err := ctx.Define("*sources*", sourceList); err != nil {
+		return nil, fmt.Errorf("failed to define *sources*: %v", err)
 	}
 
 	return ctx.Execute(sink.PipelineScript)

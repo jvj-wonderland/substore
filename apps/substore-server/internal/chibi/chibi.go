@@ -40,7 +40,6 @@ static const char* get_string_data(sexp x) { return sexp_string_data(x); }
 static size_t get_string_size(sexp x) { return sexp_string_size(x); }
 
 static sexp get_context_env(sexp ctx) { return sexp_context_env(ctx); }
-static void set_context_env(sexp ctx, sexp env) { sexp_context_env(ctx) = env; }
 
 static void load_standard_ports(sexp ctx) {
     sexp_load_standard_ports(ctx, NULL, stdin, stdout, stderr, 1);
@@ -48,11 +47,12 @@ static void load_standard_ports(sexp ctx) {
 
 static int is_list(sexp ctx, sexp x) { return sexp_listp(ctx, x) != SEXP_FALSE; }
 
-// Use the available functions to create a child context with an extended environment
-static sexp wrap_make_child_context(sexp ctx) {
+// Use sexp_make_eval_context and sexp_extend_env to create an isolated child context.
+// This is wrapped in C because sexp_context_stack and sexp_context_env are macros.
+static sexp spawn_isolated_child_context(sexp ctx) {
     sexp ctx2 = sexp_make_eval_context(ctx, sexp_context_stack(ctx), sexp_context_env(ctx), 0, 0);
     if (sexp_exceptionp(ctx2)) return ctx2;
-    // Create an extended environment to avoid polluting the parent
+    // Create an extended environment frame to isolate definitions (like 'sources') in the child.
     sexp env = sexp_extend_env(ctx2, sexp_context_env(ctx), SEXP_NULL, SEXP_NULL);
     if (sexp_exceptionp(env)) return env;
     sexp_context_env(ctx2) = env;
@@ -92,7 +92,7 @@ func NewContext() *Context {
 
 // ChildContext creates a new context with an environment that inherits from the parent.
 func (c *Context) ChildContext() *Context {
-	res := C.wrap_make_child_context(c.ctx)
+	res := C.spawn_isolated_child_context(c.ctx)
 	return &Context{ctx: res}
 }
 

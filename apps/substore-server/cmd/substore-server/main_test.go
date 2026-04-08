@@ -82,7 +82,7 @@ func TestAddSinkAndExecute(t *testing.T) {
 	sinkReq := AddSubscriptionSinkRequest{
 		Name:           "mysink",
 		SinkFormat:     substoreserver.SinkFormatJSON,
-		PipelineScript: `sources`,
+		PipelineScript: `*sources*`,
 	}
 	sinkBytes, _ := json.Marshal(sinkReq)
 	req := httptest.NewRequest("POST", "/api/sinks", bytes.NewReader(sinkBytes))
