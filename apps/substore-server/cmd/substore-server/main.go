@@ -18,7 +18,7 @@ import (
 
 type Server struct {
 	storage *storage.Storage
-	chibi   *chibi.Context
+	chibi   *chibi.Pool
 }
 
 func NewServer(dbPath string) (*Server, error) {
@@ -28,7 +28,7 @@ func NewServer(dbPath string) (*Server, error) {
 	}
 	return &Server{
 		storage: s,
-		chibi:   chibi.NewContext(),
+		chibi:   chibi.NewPool(),
 	}, nil
 }
 
@@ -185,7 +185,11 @@ func (s *Server) handleExecuteSink(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) executePipeline(sink *substoreserver.SubscriptionSink, sources []*storage.Source) (any, error) {
-	ctx := s.chibi.ChildContext()
+	parent := s.chibi.Get()
+	defer s.chibi.Put(parent)
+
+	// Spawn a child context to ensure environment isolation
+	ctx := parent.ChildContext()
 
 	var sourceList []map[string]any
 	for _, src := range sources {

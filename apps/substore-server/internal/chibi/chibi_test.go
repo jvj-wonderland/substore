@@ -89,7 +89,7 @@ func TestSchemeException(t *testing.T) {
 	}
 }
 
-func TestChildContext(t *testing.T) {
+func TestChildContextIsolation(t *testing.T) {
 	parent := NewContext()
 	err := parent.Define("shared", int64(100))
 	if err != nil {
@@ -106,16 +106,35 @@ func TestChildContext(t *testing.T) {
 		t.Errorf("Expected 100 in child, got %v", res)
 	}
 
+	// Define something in child - should NOT affect parent environment
 	err = child.Define("child-only", int64(200))
 	if err != nil {
 		t.Fatalf("Define in child failed: %v", err)
 	}
 
-	res, err = parent.Execute("child-only")
-	if err != nil {
-		t.Fatalf("Execute in parent for child variable failed: %v", err)
+	_, err = parent.Execute("child-only")
+	if err == nil {
+		t.Error("Expected error when accessing child-only variable from parent, but it succeeded")
 	}
-	if res != int64(200) {
-		t.Errorf("Expected 200 in parent (since they share environment), got %v", res)
+}
+
+func TestPool(t *testing.T) {
+	pool := NewPool()
+	
+	ctx1 := pool.Get()
+	defer pool.Put(ctx1)
+	
+	err := ctx1.Define("x", int64(10))
+	if err != nil {
+		t.Fatalf("Define in ctx1 failed: %v", err)
+	}
+
+	ctx2 := pool.Get()
+	defer pool.Put(ctx2)
+	
+	res, err := ctx2.Execute("x")
+	// x should NOT be defined in ctx2 because it has a separate environment
+	if err == nil {
+		t.Errorf("Expected error for undefined variable x in independent context, got %v", res)
 	}
 }

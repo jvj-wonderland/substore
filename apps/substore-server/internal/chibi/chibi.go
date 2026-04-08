@@ -40,17 +40,30 @@ static const char* get_string_data(sexp x) { return sexp_string_data(x); }
 static size_t get_string_size(sexp x) { return sexp_string_size(x); }
 
 static sexp get_context_env(sexp ctx) { return sexp_context_env(ctx); }
+static void set_context_env(sexp ctx, sexp env) { sexp_context_env(ctx) = env; }
 
 static void load_standard_ports(sexp ctx) {
     sexp_load_standard_ports(ctx, NULL, stdin, stdout, stderr, 1);
 }
 
 static int is_list(sexp ctx, sexp x) { return sexp_listp(ctx, x) != SEXP_FALSE; }
+
+// Use the available functions to create a child context with an extended environment
+static sexp wrap_make_child_context(sexp ctx) {
+    sexp ctx2 = sexp_make_eval_context(ctx, sexp_context_stack(ctx), sexp_context_env(ctx), 0, 0);
+    if (sexp_exceptionp(ctx2)) return ctx2;
+    // Create an extended environment to avoid polluting the parent
+    sexp env = sexp_extend_env(ctx2, sexp_context_env(ctx), SEXP_NULL, SEXP_NULL);
+    if (sexp_exceptionp(env)) return env;
+    sexp_context_env(ctx2) = env;
+    return ctx2;
+}
 */
 import "C"
 import (
 	"fmt"
 	"reflect"
+	"sync"
 	"unsafe"
 )
 
@@ -77,9 +90,10 @@ func NewContext() *Context {
 	return MakeEvalContext(nil, nil, nil, 0, 0)
 }
 
-// ChildContext creates a new context sharing the same environment.
+// ChildContext creates a new context with an environment that inherits from the parent.
 func (c *Context) ChildContext() *Context {
-	return MakeEvalContext(c, nil, C.get_context_env(c.ctx), 0, 0)
+	res := C.wrap_make_child_context(c.ctx)
+	return &Context{ctx: res}
 }
 
 // Execute executes a scheme script and returns the result.
@@ -224,4 +238,26 @@ func (c *Context) GoToSexp(v any) C.sexp {
 	}
 
 	return C.sexp_null()
+}
+
+type Pool struct {
+	pool sync.Pool
+}
+
+func NewPool() *Pool {
+	return &Pool{
+		pool: sync.Pool{
+			New: func() any {
+				return NewContext()
+			},
+		},
+	}
+}
+
+func (p *Pool) Get() *Context {
+	return p.pool.Get().(*Context)
+}
+
+func (p *Pool) Put(c *Context) {
+	p.pool.Put(c)
 }
