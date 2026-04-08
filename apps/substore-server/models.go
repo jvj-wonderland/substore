@@ -35,6 +35,7 @@ type SubscriptionSource struct {
 
 type RemoteSubscriptionSource struct {
 	SubscriptionSource
+	URL            string
 	FetchMode      FetchMode
 	UpdateInterval int64
 	LastUpdated    int64
@@ -48,5 +49,6 @@ type LocalSubscriptionSource struct {
 
 type SubscriptionSink struct {
 	Name           string
+	SinkFormat     SinkFormat
 	PipelineScript string
 }
