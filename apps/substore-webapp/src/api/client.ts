@@ -2,6 +2,8 @@ import { HttpClient, HttpClientRequest, HttpClientResponse, FetchHttpClient } fr
 import { Effect, Schema } from "effect"
 import * as Schemas from "./schemas"
 
+export * from "./schemas"
+
 const API_BASE = "/api"
 
 const baseClient = Effect.gen(function* () {
