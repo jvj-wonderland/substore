@@ -54,6 +54,30 @@ func TestAddLocalSource(t *testing.T) {
 	json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.Equal(t, "test-local", resp.Name)
 	assert.Equal(t, "test-content", resp.Content)
+
+	// Update the source
+	updatePayload := LocalSubscriptionSourcePayload{
+		SubscriptionSourcePayload: SubscriptionSourcePayload{
+			Name: "test-local-updated",
+		},
+	}
+	upBytes, _ := json.Marshal(updatePayload)
+	upReqBody := AddSubscriptionSourceRequest{
+		Type:    "local",
+		Payload: upBytes,
+	}
+	upReqBytes, _ := json.Marshal(upReqBody)
+
+	upReq := httptest.NewRequest("PATCH", "/api/sources/"+resp.ID, bytes.NewReader(upReqBytes))
+	upReq.SetPathValue("id", resp.ID)
+	upW := httptest.NewRecorder()
+	s.handleUpdateSource(upW, upReq)
+
+	assert.Equal(t, http.StatusOK, upW.Code)
+	var upResp SourceResponse
+	json.Unmarshal(upW.Body.Bytes(), &upResp)
+	assert.Equal(t, "test-local-updated", upResp.Name)
+	assert.Equal(t, "test-content", upResp.Content) // should remain unchanged if not provided
 }
 
 func TestAddSinkAndExecute(t *testing.T) {
@@ -90,14 +114,25 @@ func TestAddSinkAndExecute(t *testing.T) {
 	s.handleAddSink(wSink, req)
 	assert.Equal(t, http.StatusOK, wSink.Code, "Adding sink failed: "+wSink.Body.String())
 
+	// Update sink
+	sinkUpdateReq := AddSubscriptionSinkRequest{
+		SinkFormat: substoreserver.SinkFormatYAML,
+	}
+	sinkUpBytes, _ := json.Marshal(sinkUpdateReq)
+	upReq := httptest.NewRequest("PATCH", "/api/sinks/mysink", bytes.NewReader(sinkUpBytes))
+	upReq.SetPathValue("name", "mysink")
+	upW := httptest.NewRecorder()
+	s.handleUpdateSink(upW, upReq)
+	assert.Equal(t, http.StatusOK, upW.Code)
+
 	// Execute sink
-	execReq := httptest.NewRequest("GET", "/api/sinks/mysink", nil)
+	execReq := httptest.NewRequest("GET", "/mysink", nil)
 	execReq.SetPathValue("name", "mysink")
 	wExec := httptest.NewRecorder()
 	s.handleExecuteSink(wExec, execReq)
 
 	assert.Equal(t, http.StatusOK, wExec.Code, "Executing sink failed: "+wExec.Body.String())
-	assert.Contains(t, wExec.Body.String(), `"foo": "bar"`)
+	assert.Contains(t, wExec.Body.String(), "foo: bar") // YAML output now
 }
 
 func TestClientFetchTasks(t *testing.T) {

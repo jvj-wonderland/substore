@@ -41,25 +41,37 @@ func main() {
 
 	go s.startBackgroundFetcher(context.Background())
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("SubStore Server"))
-	})
-
+	// Management API
 	apiMux := http.NewServeMux()
 	apiMux.HandleFunc("POST /sources", s.handleAddSource)
 	apiMux.HandleFunc("GET /sources", s.handleGetSources)
+	apiMux.HandleFunc("PUT /sources/{id}", s.handleUpdateSource)
+	apiMux.HandleFunc("PATCH /sources/{id}", s.handleUpdateSource)
+
 	apiMux.HandleFunc("POST /sinks", s.handleAddSink)
 	apiMux.HandleFunc("GET /sinks", s.handleGetSinks)
-	apiMux.HandleFunc("GET /sinks/{name}", s.handleExecuteSink)
+	apiMux.HandleFunc("PUT /sinks/{name}", s.handleUpdateSink)
+	apiMux.HandleFunc("PATCH /sinks/{name}", s.handleUpdateSink)
+
 	apiMux.HandleFunc("POST /eval", s.handleEval)
 	apiMux.HandleFunc("GET /tasks", s.handleGetTasks)
 	apiMux.HandleFunc("POST /tasks/{id}/upload", s.handleUploadTaskResult)
 
-	mux.Handle("/api/", http.StripPrefix("/api", apiMux))
+	// Execution API
+	execMux := http.NewServeMux()
+	execMux.HandleFunc("GET /{name}", s.handleExecuteSink)
 
-	log.Println("Server starting on :8080")
-	http.ListenAndServe(":8080", mux)
+	go func() {
+		log.Println("Management API starting on :8080")
+		if err := http.ListenAndServe(":8080", http.StripPrefix("/api", apiMux)); err != nil {
+			log.Fatalf("Management API failed: %v", err)
+		}
+	}()
+
+	log.Println("Execution API starting on :8001")
+	if err := http.ListenAndServe(":8001", execMux); err != nil {
+		log.Fatalf("Execution API failed: %v", err)
+	}
 }
 
 type SubscriptionSourcePayload struct {
@@ -91,31 +103,8 @@ func (s *Server) handleAddSource(w http.ResponseWriter, r *http.Request) {
 		ID: id,
 	}
 
-	switch req.Type {
-	case "local":
-		var payload LocalSubscriptionSourcePayload
-		if err := json.Unmarshal(req.Payload, &payload); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		source.Type = "local"
-		source.Name = payload.Name
-		source.Tags = payload.Tags
-		source.Content = payload.Content
-	case "remote":
-		var payload RemoteSubscriptionSourcePayload
-		if err := json.Unmarshal(req.Payload, &payload); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		source.Type = "remote"
-		source.Name = payload.Name
-		source.Tags = payload.Tags
-		source.URL = payload.URL
-		source.FetchMode = payload.FetchMode
-		source.UpdateInterval = payload.UpdateInterval
-	default:
-		http.Error(w, "invalid source type", http.StatusBadRequest)
+	if err := s.applySourcePayload(source, req.Type, req.Payload); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -125,17 +114,77 @@ func (s *Server) handleAddSource(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(SourceResponse{
-		ID:             source.ID,
-		Type:           source.Type,
-		Name:           source.Name,
-		Tags:           source.Tags,
-		URL:            source.URL,
-		FetchMode:      source.FetchMode,
-		UpdateInterval: source.UpdateInterval,
-		LastUpdated:    source.LastUpdated,
-		Content:        source.Content,
-	})
+	json.NewEncoder(w).Encode(s.toSourceResponse(source))
+}
+
+func (s *Server) handleUpdateSource(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	source, err := s.storage.GetSource(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	var req AddSubscriptionSourceRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := s.applySourcePayload(source, req.Type, req.Payload); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := s.storage.AddSource(source); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(s.toSourceResponse(source))
+}
+
+func (s *Server) applySourcePayload(source *storage.Source, sourceType string, payload json.RawMessage) error {
+	switch sourceType {
+	case "local":
+		var p LocalSubscriptionSourcePayload
+		if err := json.Unmarshal(payload, &p); err != nil {
+			return err
+		}
+		source.Type = "local"
+		if p.Name != "" {
+			source.Name = p.Name
+		}
+		if p.Tags != nil {
+			source.Tags = p.Tags
+		}
+		if p.Content != "" {
+			source.Content = p.Content
+		}
+	case "remote":
+		var p RemoteSubscriptionSourcePayload
+		if err := json.Unmarshal(payload, &p); err != nil {
+			return err
+		}
+		source.Type = "remote"
+		if p.Name != "" {
+			source.Name = p.Name
+		}
+		if p.Tags != nil {
+			source.Tags = p.Tags
+		}
+		if p.URL != "" {
+			source.URL = p.URL
+		}
+		source.FetchMode = p.FetchMode
+		if p.UpdateInterval != 0 {
+			source.UpdateInterval = p.UpdateInterval
+		}
+	default:
+		return fmt.Errorf("invalid source type: %s", sourceType)
+	}
+	return nil
 }
 
 func (s *Server) handleGetSources(w http.ResponseWriter, r *http.Request) {
@@ -146,17 +195,7 @@ func (s *Server) handleGetSources(w http.ResponseWriter, r *http.Request) {
 	}
 	var resp []SourceResponse
 	for _, source := range sources {
-		resp = append(resp, SourceResponse{
-			ID:             source.ID,
-			Type:           source.Type,
-			Name:           source.Name,
-			Tags:           source.Tags,
-			URL:            source.URL,
-			FetchMode:      source.FetchMode,
-			UpdateInterval: source.UpdateInterval,
-			LastUpdated:    source.LastUpdated,
-			Content:        source.Content,
-		})
+		resp = append(resp, s.toSourceResponse(source))
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
@@ -169,20 +208,13 @@ func (s *Server) handleAddSink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	L := s.fennel.Get()
-	defer s.fennel.Put(L)
-
-	compiled, err := fennel.Compile(L, req.PipelineScript)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to compile script: %v", err), http.StatusBadRequest)
-		return
+	sink := &substoreserver.SubscriptionSink{
+		Name: req.Name,
 	}
 
-	sink := &substoreserver.SubscriptionSink{
-		Name:                   req.Name,
-		SinkFormat:             req.SinkFormat,
-		PipelineScript:         req.PipelineScript,
-		CompiledPipelineScript: compiled,
+	if err := s.applySinkPayload(sink, &req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	if err := s.storage.AddSink(sink); err != nil {
@@ -191,11 +223,53 @@ func (s *Server) handleAddSink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(SinkResponse{
-		Name:           sink.Name,
-		SinkFormat:     sink.SinkFormat,
-		PipelineScript: sink.PipelineScript,
-	})
+	json.NewEncoder(w).Encode(s.toSinkResponse(sink))
+}
+
+func (s *Server) handleUpdateSink(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	sink, err := s.storage.GetSink(name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	var req AddSubscriptionSinkRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := s.applySinkPayload(sink, &req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := s.storage.AddSink(sink); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(s.toSinkResponse(sink))
+}
+
+func (s *Server) applySinkPayload(sink *substoreserver.SubscriptionSink, req *AddSubscriptionSinkRequest) error {
+	if req.SinkFormat != 0 {
+		sink.SinkFormat = req.SinkFormat
+	}
+	if req.PipelineScript != "" {
+		L := s.fennel.Get()
+		defer s.fennel.Put(L)
+
+		compiled, err := fennel.Compile(L, req.PipelineScript)
+		if err != nil {
+			return fmt.Errorf("failed to compile script: %v", err)
+		}
+		sink.PipelineScript = req.PipelineScript
+		sink.CompiledPipelineScript = compiled
+	}
+	return nil
 }
 
 func (s *Server) handleGetSinks(w http.ResponseWriter, r *http.Request) {
@@ -206,11 +280,7 @@ func (s *Server) handleGetSinks(w http.ResponseWriter, r *http.Request) {
 	}
 	var resp []SinkResponse
 	for _, sink := range sinks {
-		resp = append(resp, SinkResponse{
-			Name:           sink.Name,
-			SinkFormat:     sink.SinkFormat,
-			PipelineScript: sink.PipelineScript,
-		})
+		resp = append(resp, s.toSinkResponse(sink))
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
@@ -273,7 +343,8 @@ func (s *Server) executePipeline(sink *substoreserver.SubscriptionSink, sources 
 		})
 	}
 
-	L.SetGlobal("__fnl_global___2asources_2a", fennel.MapToLua(L, sourceList))
+	lSources := fennel.MapToLua(L, sourceList)
+	L.SetGlobal("__fnl_global___2asources_2a", lSources)
 
 	script := sink.CompiledPipelineScript
 	if script == "" {
@@ -429,7 +500,8 @@ func (s *Server) handleEval(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	L.SetGlobal("__fnl_global___2asources_2a", fennel.MapToLua(L, sourceList))
+	lSources := fennel.MapToLua(L, sourceList)
+	L.SetGlobal("__fnl_global___2asources_2a", lSources)
 
 	result, stdout, stderr, err := fennel.EvalWithOutput(L, req.Script)
 	resp := EvalResponse{
@@ -445,6 +517,28 @@ func (s *Server) handleEval(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
+}
+
+func (s *Server) toSourceResponse(source *storage.Source) SourceResponse {
+	return SourceResponse{
+		ID:             source.ID,
+		Type:           source.Type,
+		Name:           source.Name,
+		Tags:           source.Tags,
+		URL:            source.URL,
+		FetchMode:      source.FetchMode,
+		UpdateInterval: source.UpdateInterval,
+		LastUpdated:    source.LastUpdated,
+		Content:        source.Content,
+	}
+}
+
+func (s *Server) toSinkResponse(sink *substoreserver.SubscriptionSink) SinkResponse {
+	return SinkResponse{
+		Name:           sink.Name,
+		SinkFormat:     sink.SinkFormat,
+		PipelineScript: sink.PipelineScript,
+	}
 }
 
 type EvalRequest struct {
