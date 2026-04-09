@@ -3,24 +3,30 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write \"**/*.{ts,tsx}\""
+  },
   "workspaces": [
     "apps/*"
   ],
   "devDependencies": {
+    "@effect/language-service": "^0.84.3",
+    "@eslint/js": "^10.0.1",
     "@types/bun": "latest",
-    "@eslint/js": "^9.39.4",
-    "@types/node": "^24.12.0",
+    "@types/node": "^25.5.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.2.0",
-    "eslint": "^9.39.4",
+    "@vitejs/plugin-react": "^6.0.1",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "eslint": "^10.2.0",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^16.5.0",
+    "globals": "^17.4.0",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "typescript-eslint": "^8.58.0",
-    "vite": "^8",
-    "typescript": "^6"
+    "typescript": "^6",
+    "typescript-eslint": "^8.58.1",
+    "vite": "^8.0.8"
   }
 }
