@@ -1,37 +1,41 @@
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router"
 import { TanStackRouterDevtools } from "@tanstack/router-devtools"
-import { RiDatabase2Line, RiTerminalBoxLine, RiSettings4Line } from "@remixicon/react"
+import {
+  RiDatabase2Line,
+  RiTerminalBoxLine,
+  RiSettings4Line,
+} from "@remixicon/react"
 
 export const Route = createRootRoute({
   component: () => (
     <div className="flex h-screen w-full">
-      <aside className="w-64 border-r bg-muted/40 flex flex-col">
-        <div className="p-6 border-b">
+      <aside className="bg-muted/40 flex w-64 flex-col border-r">
+        <div className="border-b p-6">
           <h1 className="text-xl font-bold">SubStore</h1>
         </div>
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 space-y-2 p-4">
           <Link
             to="/sources"
-            className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted transition-colors"
+            className="hover:bg-muted flex items-center gap-3 rounded-md px-3 py-2 transition-colors"
             activeProps={{ className: "bg-muted font-medium" }}
           >
-            <RiDatabase2Line className="w-5 h-5" />
+            <RiDatabase2Line className="h-5 w-5" />
             Sources
           </Link>
           <Link
             to="/sinks"
-            className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted transition-colors"
+            className="hover:bg-muted flex items-center gap-3 rounded-md px-3 py-2 transition-colors"
             activeProps={{ className: "bg-muted font-medium" }}
           >
-            <RiSettings4Line className="w-5 h-5" />
+            <RiSettings4Line className="h-5 w-5" />
             Sinks
           </Link>
           <Link
             to="/eval"
-            className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted transition-colors"
+            className="hover:bg-muted flex items-center gap-3 rounded-md px-3 py-2 transition-colors"
             activeProps={{ className: "bg-muted font-medium" }}
           >
-            <RiTerminalBoxLine className="w-5 h-5" />
+            <RiTerminalBoxLine className="h-5 w-5" />
             Eval
           </Link>
         </nav>

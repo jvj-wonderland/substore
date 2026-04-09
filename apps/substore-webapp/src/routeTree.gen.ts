@@ -8,60 +8,94 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as SourcesRouteImport } from './routes/sources'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as rootRouteImport } from "./routes/__root"
+import { Route as SourcesRouteImport } from "./routes/sources"
+import { Route as SinksRouteImport } from "./routes/sinks"
+import { Route as EvalRouteImport } from "./routes/eval"
+import { Route as IndexRouteImport } from "./routes/index"
 
 const SourcesRoute = SourcesRouteImport.update({
-  id: '/sources',
-  path: '/sources',
+  id: "/sources",
+  path: "/sources",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SinksRoute = SinksRouteImport.update({
+  id: "/sinks",
+  path: "/sinks",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EvalRoute = EvalRouteImport.update({
+  id: "/eval",
+  path: "/eval",
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/sources': typeof SourcesRoute
+  "/": typeof IndexRoute
+  "/eval": typeof EvalRoute
+  "/sinks": typeof SinksRoute
+  "/sources": typeof SourcesRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/sources': typeof SourcesRoute
+  "/": typeof IndexRoute
+  "/eval": typeof EvalRoute
+  "/sinks": typeof SinksRoute
+  "/sources": typeof SourcesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/sources': typeof SourcesRoute
+  "/": typeof IndexRoute
+  "/eval": typeof EvalRoute
+  "/sinks": typeof SinksRoute
+  "/sources": typeof SourcesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sources'
+  fullPaths: "/" | "/eval" | "/sinks" | "/sources"
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sources'
-  id: '__root__' | '/' | '/sources'
+  to: "/" | "/eval" | "/sinks" | "/sources"
+  id: "__root__" | "/" | "/eval" | "/sinks" | "/sources"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EvalRoute: typeof EvalRoute
+  SinksRoute: typeof SinksRoute
   SourcesRoute: typeof SourcesRoute
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/sources': {
-      id: '/sources'
-      path: '/sources'
-      fullPath: '/sources'
+    "/sources": {
+      id: "/sources"
+      path: "/sources"
+      fullPath: "/sources"
       preLoaderRoute: typeof SourcesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
+    "/sinks": {
+      id: "/sinks"
+      path: "/sinks"
+      fullPath: "/sinks"
+      preLoaderRoute: typeof SinksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/eval": {
+      id: "/eval"
+      path: "/eval"
+      fullPath: "/eval"
+      preLoaderRoute: typeof EvalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/": {
+      id: "/"
+      path: "/"
+      fullPath: "/"
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -70,6 +104,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EvalRoute: EvalRoute,
+  SinksRoute: SinksRoute,
   SourcesRoute: SourcesRoute,
 }
 export const routeTree = rootRouteImport

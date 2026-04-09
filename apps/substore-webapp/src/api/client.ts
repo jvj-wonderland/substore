@@ -1,4 +1,9 @@
-import { HttpClient, HttpClientRequest, HttpClientResponse, FetchHttpClient } from "@effect/platform"
+import {
+  HttpClient,
+  HttpClientRequest,
+  HttpClientResponse,
+  FetchHttpClient,
+} from "@effect/platform"
 import { Effect, Schema } from "effect"
 import * as Schemas from "./schemas"
 
@@ -17,7 +22,9 @@ const baseClient = Effect.gen(function* () {
 export const getSources = Effect.gen(function* () {
   const client = yield* baseClient
   const response = yield* client.get("/sources")
-  return yield* HttpClientResponse.schemaBodyJson(Schema.Array(Schemas.Source))(response)
+  return yield* HttpClientResponse.schemaBodyJson(Schema.Array(Schemas.Source))(
+    response
+  )
 })
 
 export const addSource = (payload: typeof Schemas.AddSourcePayload.Type) =>
@@ -30,7 +37,10 @@ export const addSource = (payload: typeof Schemas.AddSourcePayload.Type) =>
     return yield* HttpClientResponse.schemaBodyJson(Schemas.Source)(response)
   })
 
-export const updateSource = (id: string, payload: typeof Schemas.AddSourcePayload.Type) =>
+export const updateSource = (
+  id: string,
+  payload: typeof Schemas.AddSourcePayload.Type
+) =>
   Effect.gen(function* () {
     const client = yield* baseClient
     const response = yield* HttpClientRequest.patch(`/sources/${id}`).pipe(
@@ -43,7 +53,9 @@ export const updateSource = (id: string, payload: typeof Schemas.AddSourcePayloa
 export const getSinks = Effect.gen(function* () {
   const client = yield* baseClient
   const response = yield* client.get("/sinks")
-  return yield* HttpClientResponse.schemaBodyJson(Schema.Array(Schemas.Sink))(response)
+  return yield* HttpClientResponse.schemaBodyJson(Schema.Array(Schemas.Sink))(
+    response
+  )
 })
 
 export const addSink = (payload: typeof Schemas.AddSinkPayload.Type) =>
@@ -56,7 +68,10 @@ export const addSink = (payload: typeof Schemas.AddSinkPayload.Type) =>
     return yield* HttpClientResponse.schemaBodyJson(Schemas.Sink)(response)
   })
 
-export const updateSink = (name: string, payload: typeof Schemas.AddSinkPayload.Type) =>
+export const updateSink = (
+  name: string,
+  payload: typeof Schemas.AddSinkPayload.Type
+) =>
   Effect.gen(function* () {
     const client = yield* baseClient
     const response = yield* HttpClientRequest.patch(`/sinks/${name}`).pipe(
@@ -73,7 +88,9 @@ export const evalScript = (payload: typeof Schemas.EvalRequest.Type) =>
       HttpClientRequest.bodyJson(payload),
       Effect.flatMap(client.execute)
     )
-    return yield* HttpClientResponse.schemaBodyJson(Schemas.EvalResponse)(response)
+    return yield* HttpClientResponse.schemaBodyJson(Schemas.EvalResponse)(
+      response
+    )
   })
 
 export const clientLayer = FetchHttpClient.layer
