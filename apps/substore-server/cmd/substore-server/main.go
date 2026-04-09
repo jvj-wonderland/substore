@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,6 +18,9 @@ import (
 	"github.com/jvj-wonderland/substore/server/internal/storage"
 	"go.yaml.in/yaml/v4"
 )
+
+//go:embed all:dist
+var uiDist embed.FS
 
 type Server struct {
 	storage *storage.Storage
@@ -57,13 +63,50 @@ func main() {
 	apiMux.HandleFunc("GET /tasks", s.handleGetTasks)
 	apiMux.HandleFunc("POST /tasks/{id}/upload", s.handleUploadTaskResult)
 
+	// Combined Mux for Management Port
+	managementMux := http.NewServeMux()
+	managementMux.Handle("/api/", http.StripPrefix("/api", apiMux))
+
+	// Serve SPA
+	uiFS, err := fs.Sub(uiDist, "dist")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fileServer := http.FileServer(http.FS(uiFS))
+
+	managementMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// If it's an API call, it should have been caught by /api/ prefix
+		// but just in case or for other root paths:
+		if strings.HasPrefix(r.URL.Path, "/api") {
+			http.NotFound(w, r)
+			return
+		}
+
+		// Check if file exists in embedded FS
+		f, err := uiFS.Open(strings.TrimPrefix(r.URL.Path, "/"))
+		if err == nil {
+			f.Close()
+			fileServer.ServeHTTP(w, r)
+			return
+		}
+
+		// Fallback to index.html for SPA routing
+		index, err := uiDist.ReadFile("dist/index.html")
+		if err != nil {
+			http.Error(w, "SPA not found", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(index)
+	})
+
 	// Execution API
 	execMux := http.NewServeMux()
 	execMux.HandleFunc("GET /{name}", s.handleExecuteSink)
 
 	go func() {
-		log.Println("Management API starting on :8080")
-		if err := http.ListenAndServe(":8080", http.StripPrefix("/api", apiMux)); err != nil {
+		log.Println("Management API and SPA starting on :8080")
+		if err := http.ListenAndServe(":8080", managementMux); err != nil {
 			log.Fatalf("Management API failed: %v", err)
 		}
 	}()
