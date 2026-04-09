@@ -48,7 +48,8 @@ type LocalSubscriptionSource struct {
 }
 
 type SubscriptionSink struct {
-	Name           string
-	SinkFormat     SinkFormat
-	PipelineScript string
+	Name                   string
+	SinkFormat             SinkFormat
+	PipelineScript         string
+	CompiledPipelineScript string
 }

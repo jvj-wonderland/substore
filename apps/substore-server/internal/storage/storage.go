@@ -13,11 +13,11 @@ type Source struct {
 	ID             string
 	Name           string
 	Tags           []string
-	Type           string // "local", "remote"
-	URL            string // for remote
+	Type           string                   // "local", "remote"
+	URL            string                   // for remote
 	FetchMode      substoreserver.FetchMode // for remote
-	UpdateInterval int64 // for remote
-	LastUpdated    int64 // for remote
+	UpdateInterval int64                    // for remote
+	LastUpdated    int64                    // for remote
 	Content        string
 }
 

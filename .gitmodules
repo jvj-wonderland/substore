@@ -1,3 +1,0 @@
-[submodule "apps/substore-server/internal/chibi/chibi-src"]
-	path = apps/substore-server/internal/chibi/chibi-src
-	url = git@github.com:ashinn/chibi-scheme.git

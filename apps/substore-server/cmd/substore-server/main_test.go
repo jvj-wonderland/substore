@@ -49,11 +49,11 @@ func TestAddLocalSource(t *testing.T) {
 	s.handleAddSource(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
-	var resp map[string]interface{}
+
+	var resp SourceResponse
 	json.Unmarshal(w.Body.Bytes(), &resp)
-	assert.Equal(t, "test-local", resp["Name"])
-	assert.Equal(t, "test-content", resp["Content"])
+	assert.Equal(t, "test-local", resp.Name)
+	assert.Equal(t, "test-content", resp.Content)
 }
 
 func TestAddSinkAndExecute(t *testing.T) {
@@ -122,10 +122,10 @@ func TestClientFetchTasks(t *testing.T) {
 	sReq := httptest.NewRequest("POST", "/api/sources", bytes.NewReader(sReqBytes))
 	w := httptest.NewRecorder()
 	s.handleAddSource(w, sReq)
-	
-	var sourceResp map[string]interface{}
+
+	var sourceResp SourceResponse
 	json.Unmarshal(w.Body.Bytes(), &sourceResp)
-	id := sourceResp["ID"].(string)
+	id := sourceResp.ID
 
 	// Get tasks
 	taskReq := httptest.NewRequest("GET", "/api/tasks", nil)
@@ -144,4 +144,45 @@ func TestClientFetchTasks(t *testing.T) {
 	// Verify content in storage
 	src, _ := s.storage.GetSource(id)
 	assert.Equal(t, "fetched-content", src.Content)
+}
+
+func TestEval(t *testing.T) {
+	s, dbFile := setupTestServer(t)
+	defer teardownTestServer(s, dbFile)
+
+	// Add a local source first
+	localPayload := LocalSubscriptionSourcePayload{
+		SubscriptionSourcePayload: SubscriptionSourcePayload{
+			Name: "src1",
+		},
+		Content: `{"foo": "bar"}`,
+	}
+	lpBytes, _ := json.Marshal(localPayload)
+	sReqBody := AddSubscriptionSourceRequest{
+		Type:    "local",
+		Payload: lpBytes,
+	}
+	sReqBytes, _ := json.Marshal(sReqBody)
+	sReq := httptest.NewRequest("POST", "/api/sources", bytes.NewReader(sReqBytes))
+	wAdd := httptest.NewRecorder()
+	s.handleAddSource(wAdd, sReq)
+	assert.Equal(t, http.StatusOK, wAdd.Code)
+
+	evalReq := EvalRequest{
+		Script: `(do (print "hello") (+ 1 (length *sources*)))`,
+	}
+	evalBytes, _ := json.Marshal(evalReq)
+	req := httptest.NewRequest("POST", "/api/eval", bytes.NewReader(evalBytes))
+	w := httptest.NewRecorder()
+	s.handleEval(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Eval failed with status %d: %s", w.Code, w.Body.String())
+		return
+	}
+
+	var resp EvalResponse
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.Equal(t, float64(2), resp.Result) // 1 source + 1 = 2
+	assert.Equal(t, "hello\n", resp.Stdout)
 }
