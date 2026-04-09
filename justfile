@@ -4,6 +4,8 @@ dev:
 
 # Start the Go API server in development mode
 dev-api:
+    mkdir -p apps/substore-server/cmd/substore-server/dist
+    touch apps/substore-server/cmd/substore-server/dist/index.html
     cd apps/substore-server && go run cmd/substore-server/main.go
 
 # Start the Vite development server for the UI
