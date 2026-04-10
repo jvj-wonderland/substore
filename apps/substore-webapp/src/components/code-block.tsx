@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { createHighlighter, type Highlighter } from "shiki"
+import { useTheme } from "./theme-provider"
 
 interface CodeBlockProps {
   code: string
@@ -12,8 +13,8 @@ let highlighterPromise: Promise<Highlighter> | null = null
 function getHighlighter() {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighter({
-      themes: ["github-dark"],
-      langs: ["json", "yaml", "clojure"], // Clojure is close enough to Fennel for basic EDN
+      themes: ["github-dark", "github-light"],
+      langs: ["json", "yaml", "fennel"],
     })
   }
   return highlighterPromise
@@ -22,6 +23,7 @@ function getHighlighter() {
 export function CodeBlock({ code, lang, className }: CodeBlockProps) {
   const [html, setHtml] = useState<string>("")
   const [loading, setLoading] = useState(true)
+  const { theme } = useTheme()
 
   useEffect(() => {
     let isMounted = true
@@ -30,9 +32,17 @@ export function CodeBlock({ code, lang, className }: CodeBlockProps) {
     getHighlighter().then((highlighter) => {
       if (!isMounted) return
 
+      // Determine the theme to use
+      let resolvedTheme = theme
+      if (theme === "system") {
+        resolvedTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light"
+      }
+
       const highlighted = highlighter.codeToHtml(code, {
-        lang: lang === "fennel" ? "clojure" : lang,
-        theme: "github-dark",
+        lang,
+        theme: resolvedTheme === "dark" ? "github-dark" : "github-light",
       })
       setHtml(highlighted)
       setLoading(false)
@@ -41,7 +51,7 @@ export function CodeBlock({ code, lang, className }: CodeBlockProps) {
     return () => {
       isMounted = false
     }
-  }, [code, lang])
+  }, [code, lang, theme])
 
   if (loading) {
     return (

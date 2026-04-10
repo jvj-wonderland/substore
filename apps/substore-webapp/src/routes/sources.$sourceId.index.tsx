@@ -128,7 +128,7 @@ function ViewSourcePage() {
               <div className="bg-muted/50 px-4 py-2 border-b flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Original Content (YAML/JSON)</span>
               </div>
-              <div className="flex-1 bg-zinc-950 overflow-auto p-4">
+              <div className="flex-1 overflow-auto p-4">
                 <CodeBlock code={source.content} lang="yaml" />
               </div>
             </div>
@@ -137,7 +137,7 @@ function ViewSourcePage() {
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Transformed Fennel Object</span>
                 {isFennelLoading && <span className="text-[10px] animate-pulse">Transforming...</span>}
               </div>
-              <div className="flex-1 bg-zinc-950 overflow-auto p-4">
+              <div className="flex-1 overflow-auto p-4">
                 {fennelData?.fennel ? (
                   <CodeBlock code={fennelData.fennel} lang="fennel" />
                 ) : (

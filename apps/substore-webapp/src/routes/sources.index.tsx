@@ -107,7 +107,7 @@ function SourceCard({
           ))}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-end gap-2 pt-0">
+      <CardFooter className="justify-end gap-2">
         <Button
           variant="outline"
           size="sm"

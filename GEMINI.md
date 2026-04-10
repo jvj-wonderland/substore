@@ -46,6 +46,6 @@
 - **Effect Context**: Ensure all Effect dependencies are resolved (type `never`) before calling runners like `runPromise` in utility functions.
 - **TanStack Router Generation**: When adding new routes, the route tree might not auto-update. Manually trigger generation using: `bunx @tanstack/router-cli generate --routes-directory src/routes --generated-route-tree src/routeTree.gen.ts` from the webapp root.
 - **BaseUI Button Composition**: Strictly follow the project mandate of using the `render` prop for `Button` composition (e.g., `render={<Link to="..." />}`) instead of `asChild`. Using `asChild` will cause TypeScript errors and layout inconsistencies.
-- **EDN Syntax Highlighting**: For Fennel EDN previews, use the `clojure` language grammar in highlighting libraries (like Shiki) as a high-fidelity fallback.
+- **EDN Syntax Highlighting**: For Fennel EDN previews, use the native `fennel` language support in Shiki.
 - **React Compiler**: This project uses the **React Compiler**. Do NOT add manual memoization hooks like `useMemo`, `useCallback`, or `React.memo` unless explicitly needed for non-performance reasons. The compiler handles optimization automatically.
 - **React 19 Form Submission**: `React.FormEvent<HTMLFormElement>` is deprecated in React 19. Use `React.SubmitEvent` instead for `onSubmit` handlers, and cast `e.currentTarget` to `HTMLFormElement` when passing to `new FormData()`. Prefer React 19 **Actions** (`action` prop) for new forms where possible.

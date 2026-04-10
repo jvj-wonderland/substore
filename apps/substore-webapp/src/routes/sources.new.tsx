@@ -239,7 +239,7 @@ function AddSourcePage() {
             <div className="flex flex-col h-full gap-4">
               <div className="flex-1 flex flex-col gap-2">
                 <Label className="text-xs uppercase tracking-wider text-muted-foreground">Fennel Object Preview</Label>
-                <div className="flex-1 bg-zinc-950 rounded-lg overflow-auto border p-4">
+                <div className="flex-1 bg-muted/20 rounded-lg overflow-auto border p-4">
                   {fennelPreview ? (
                     <CodeBlock code={fennelPreview} lang="fennel" />
                   ) : (
