@@ -4,7 +4,7 @@ import { useTheme } from "./theme-provider"
 
 interface CodeBlockProps {
   code: string
-  lang: "json" | "yaml" | "fennel"
+  lang: "json" | "yaml" | "fennel" | "lua"
   className?: string
 }
 
@@ -14,7 +14,7 @@ function getHighlighter() {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighter({
       themes: ["github-dark", "github-light"],
-      langs: ["json", "yaml", "fennel"],
+      langs: ["json", "yaml", "fennel", "lua"],
     })
   }
   return highlighterPromise

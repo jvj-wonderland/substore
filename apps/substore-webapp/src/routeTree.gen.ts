@@ -14,9 +14,12 @@ import { Route as SinksRouteImport } from './routes/sinks'
 import { Route as EvalRouteImport } from './routes/eval'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SourcesIndexRouteImport } from './routes/sources.index'
+import { Route as SinksIndexRouteImport } from './routes/sinks.index'
 import { Route as SourcesNewRouteImport } from './routes/sources.new'
+import { Route as SinksNewRouteImport } from './routes/sinks.new'
 import { Route as SourcesSourceIdIndexRouteImport } from './routes/sources.$sourceId.index'
 import { Route as SourcesSourceIdEditRouteImport } from './routes/sources.$sourceId.edit'
+import { Route as SinksSinkIdEditRouteImport } from './routes/sinks.$sinkId.edit'
 
 const SourcesRoute = SourcesRouteImport.update({
   id: '/sources',
@@ -43,10 +46,20 @@ const SourcesIndexRoute = SourcesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => SourcesRoute,
 } as any)
+const SinksIndexRoute = SinksIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SinksRoute,
+} as any)
 const SourcesNewRoute = SourcesNewRouteImport.update({
   id: '/new',
   path: '/new',
   getParentRoute: () => SourcesRoute,
+} as any)
+const SinksNewRoute = SinksNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => SinksRoute,
 } as any)
 const SourcesSourceIdIndexRoute = SourcesSourceIdIndexRouteImport.update({
   id: '/$sourceId/',
@@ -58,23 +71,33 @@ const SourcesSourceIdEditRoute = SourcesSourceIdEditRouteImport.update({
   path: '/$sourceId/edit',
   getParentRoute: () => SourcesRoute,
 } as any)
+const SinksSinkIdEditRoute = SinksSinkIdEditRouteImport.update({
+  id: '/$sinkId/edit',
+  path: '/$sinkId/edit',
+  getParentRoute: () => SinksRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/eval': typeof EvalRoute
-  '/sinks': typeof SinksRoute
+  '/sinks': typeof SinksRouteWithChildren
   '/sources': typeof SourcesRouteWithChildren
+  '/sinks/new': typeof SinksNewRoute
   '/sources/new': typeof SourcesNewRoute
+  '/sinks/': typeof SinksIndexRoute
   '/sources/': typeof SourcesIndexRoute
+  '/sinks/$sinkId/edit': typeof SinksSinkIdEditRoute
   '/sources/$sourceId/edit': typeof SourcesSourceIdEditRoute
   '/sources/$sourceId/': typeof SourcesSourceIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/eval': typeof EvalRoute
-  '/sinks': typeof SinksRoute
+  '/sinks/new': typeof SinksNewRoute
   '/sources/new': typeof SourcesNewRoute
+  '/sinks': typeof SinksIndexRoute
   '/sources': typeof SourcesIndexRoute
+  '/sinks/$sinkId/edit': typeof SinksSinkIdEditRoute
   '/sources/$sourceId/edit': typeof SourcesSourceIdEditRoute
   '/sources/$sourceId': typeof SourcesSourceIdIndexRoute
 }
@@ -82,10 +105,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/eval': typeof EvalRoute
-  '/sinks': typeof SinksRoute
+  '/sinks': typeof SinksRouteWithChildren
   '/sources': typeof SourcesRouteWithChildren
+  '/sinks/new': typeof SinksNewRoute
   '/sources/new': typeof SourcesNewRoute
+  '/sinks/': typeof SinksIndexRoute
   '/sources/': typeof SourcesIndexRoute
+  '/sinks/$sinkId/edit': typeof SinksSinkIdEditRoute
   '/sources/$sourceId/edit': typeof SourcesSourceIdEditRoute
   '/sources/$sourceId/': typeof SourcesSourceIdIndexRoute
 }
@@ -96,17 +122,22 @@ export interface FileRouteTypes {
     | '/eval'
     | '/sinks'
     | '/sources'
+    | '/sinks/new'
     | '/sources/new'
+    | '/sinks/'
     | '/sources/'
+    | '/sinks/$sinkId/edit'
     | '/sources/$sourceId/edit'
     | '/sources/$sourceId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/eval'
-    | '/sinks'
+    | '/sinks/new'
     | '/sources/new'
+    | '/sinks'
     | '/sources'
+    | '/sinks/$sinkId/edit'
     | '/sources/$sourceId/edit'
     | '/sources/$sourceId'
   id:
@@ -115,8 +146,11 @@ export interface FileRouteTypes {
     | '/eval'
     | '/sinks'
     | '/sources'
+    | '/sinks/new'
     | '/sources/new'
+    | '/sinks/'
     | '/sources/'
+    | '/sinks/$sinkId/edit'
     | '/sources/$sourceId/edit'
     | '/sources/$sourceId/'
   fileRoutesById: FileRoutesById
@@ -124,7 +158,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EvalRoute: typeof EvalRoute
-  SinksRoute: typeof SinksRoute
+  SinksRoute: typeof SinksRouteWithChildren
   SourcesRoute: typeof SourcesRouteWithChildren
 }
 
@@ -165,12 +199,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SourcesIndexRouteImport
       parentRoute: typeof SourcesRoute
     }
+    '/sinks/': {
+      id: '/sinks/'
+      path: '/'
+      fullPath: '/sinks/'
+      preLoaderRoute: typeof SinksIndexRouteImport
+      parentRoute: typeof SinksRoute
+    }
     '/sources/new': {
       id: '/sources/new'
       path: '/new'
       fullPath: '/sources/new'
       preLoaderRoute: typeof SourcesNewRouteImport
       parentRoute: typeof SourcesRoute
+    }
+    '/sinks/new': {
+      id: '/sinks/new'
+      path: '/new'
+      fullPath: '/sinks/new'
+      preLoaderRoute: typeof SinksNewRouteImport
+      parentRoute: typeof SinksRoute
     }
     '/sources/$sourceId/': {
       id: '/sources/$sourceId/'
@@ -186,8 +234,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SourcesSourceIdEditRouteImport
       parentRoute: typeof SourcesRoute
     }
+    '/sinks/$sinkId/edit': {
+      id: '/sinks/$sinkId/edit'
+      path: '/$sinkId/edit'
+      fullPath: '/sinks/$sinkId/edit'
+      preLoaderRoute: typeof SinksSinkIdEditRouteImport
+      parentRoute: typeof SinksRoute
+    }
   }
 }
+
+interface SinksRouteChildren {
+  SinksNewRoute: typeof SinksNewRoute
+  SinksIndexRoute: typeof SinksIndexRoute
+  SinksSinkIdEditRoute: typeof SinksSinkIdEditRoute
+}
+
+const SinksRouteChildren: SinksRouteChildren = {
+  SinksNewRoute: SinksNewRoute,
+  SinksIndexRoute: SinksIndexRoute,
+  SinksSinkIdEditRoute: SinksSinkIdEditRoute,
+}
+
+const SinksRouteWithChildren = SinksRoute._addFileChildren(SinksRouteChildren)
 
 interface SourcesRouteChildren {
   SourcesNewRoute: typeof SourcesNewRoute
@@ -209,7 +278,7 @@ const SourcesRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EvalRoute: EvalRoute,
-  SinksRoute: SinksRoute,
+  SinksRoute: SinksRouteWithChildren,
   SourcesRoute: SourcesRouteWithChildren,
 }
 export const routeTree = rootRouteImport

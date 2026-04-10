@@ -44,6 +44,8 @@ export const EvalRequest = Schema.Struct({
 
 export const EvalResponse = Schema.Struct({
   result: Schema.Any,
+  result_string: Schema.optional(Schema.String),
+  compiled_script: Schema.optional(Schema.String),
   stdout: Schema.String,
   stderr: Schema.String,
   error: Schema.optional(Schema.String),

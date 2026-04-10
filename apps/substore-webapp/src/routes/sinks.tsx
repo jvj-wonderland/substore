@@ -1,5 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Outlet } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/sinks")({
-  component: () => <div className="p-8">Sinks Page (Coming Soon)</div>,
+  component: () => (
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <Outlet />
+    </div>
+  ),
 })

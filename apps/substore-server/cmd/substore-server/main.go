@@ -595,16 +595,39 @@ func (s *Server) handleEval(w http.ResponseWriter, r *http.Request) {
 	lSources := fennel.MapToLua(L, sourceList)
 	L.SetGlobal("__fnl_global___2asources_2a", lSources)
 
-	result, stdout, stderr, err := fennel.EvalWithOutput(L, req.Script)
+	compiled, compileErr := fennel.Compile(L, req.Script)
 	resp := EvalResponse{
-		Stdout: stdout,
-		Stderr: stderr,
+		CompiledScript: compiled,
 	}
-	if err != nil {
-		resp.Error = err.Error()
-		w.WriteHeader(http.StatusInternalServerError)
+
+	if compileErr != nil {
+		resp.Error = "Compile Error: " + compileErr.Error()
 	} else {
-		resp.Result = fennel.MapToGo(result)
+		result, stdout, stderr, err := fennel.EvalWithOutput(L, req.Script)
+		resp.Stdout = stdout
+		resp.Stderr = stderr
+		if err != nil {
+			resp.Error = "Runtime Error: " + err.Error()
+		} else {
+			// Map the Lua result to a Go object (map, slice, string, etc.)
+			val := fennel.MapToGo(result)
+			resp.Result = val
+
+			// Serialize the Go object into the requested format for ResultString
+			var b []byte
+			var mErr error
+			if req.SinkFormat == substoreserver.SinkFormatYAML {
+				b, mErr = yaml.Marshal(val)
+			} else {
+				b, mErr = json.MarshalIndent(val, "", "  ")
+			}
+
+			if mErr != nil {
+				resp.Error = "Serialization Error: " + mErr.Error()
+			} else {
+				resp.ResultString = string(b)
+			}
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -643,10 +666,12 @@ type EvalRequest struct {
 }
 
 type EvalResponse struct {
-	Result any    `json:"result"`
-	Stdout string `json:"stdout"`
-	Stderr string `json:"stderr"`
-	Error  string `json:"error,omitempty"`
+	Result         any    `json:"result"`
+	ResultString   string `json:"result_string,omitempty"`
+	CompiledScript string `json:"compiled_script,omitempty"`
+	Stdout         string `json:"stdout"`
+	Stderr         string `json:"stderr"`
+	Error          string `json:"error,omitempty"`
 }
 
 type AddSubscriptionSourceRequest struct {
