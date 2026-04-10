@@ -8,105 +8,209 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root"
-import { Route as SourcesRouteImport } from "./routes/sources"
-import { Route as SinksRouteImport } from "./routes/sinks"
-import { Route as EvalRouteImport } from "./routes/eval"
-import { Route as IndexRouteImport } from "./routes/index"
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as SourcesRouteImport } from './routes/sources'
+import { Route as SinksRouteImport } from './routes/sinks'
+import { Route as EvalRouteImport } from './routes/eval'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as SourcesIndexRouteImport } from './routes/sources.index'
+import { Route as SourcesNewRouteImport } from './routes/sources.new'
+import { Route as SourcesSourceIdIndexRouteImport } from './routes/sources.$sourceId.index'
+import { Route as SourcesSourceIdEditRouteImport } from './routes/sources.$sourceId.edit'
 
 const SourcesRoute = SourcesRouteImport.update({
-  id: "/sources",
-  path: "/sources",
+  id: '/sources',
+  path: '/sources',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SinksRoute = SinksRouteImport.update({
-  id: "/sinks",
-  path: "/sinks",
+  id: '/sinks',
+  path: '/sinks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EvalRoute = EvalRouteImport.update({
-  id: "/eval",
-  path: "/eval",
+  id: '/eval',
+  path: '/eval',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SourcesIndexRoute = SourcesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SourcesRoute,
+} as any)
+const SourcesNewRoute = SourcesNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => SourcesRoute,
+} as any)
+const SourcesSourceIdIndexRoute = SourcesSourceIdIndexRouteImport.update({
+  id: '/$sourceId/',
+  path: '/$sourceId/',
+  getParentRoute: () => SourcesRoute,
+} as any)
+const SourcesSourceIdEditRoute = SourcesSourceIdEditRouteImport.update({
+  id: '/$sourceId/edit',
+  path: '/$sourceId/edit',
+  getParentRoute: () => SourcesRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute
-  "/eval": typeof EvalRoute
-  "/sinks": typeof SinksRoute
-  "/sources": typeof SourcesRoute
+  '/': typeof IndexRoute
+  '/eval': typeof EvalRoute
+  '/sinks': typeof SinksRoute
+  '/sources': typeof SourcesRouteWithChildren
+  '/sources/new': typeof SourcesNewRoute
+  '/sources/': typeof SourcesIndexRoute
+  '/sources/$sourceId/edit': typeof SourcesSourceIdEditRoute
+  '/sources/$sourceId/': typeof SourcesSourceIdIndexRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute
-  "/eval": typeof EvalRoute
-  "/sinks": typeof SinksRoute
-  "/sources": typeof SourcesRoute
+  '/': typeof IndexRoute
+  '/eval': typeof EvalRoute
+  '/sinks': typeof SinksRoute
+  '/sources/new': typeof SourcesNewRoute
+  '/sources': typeof SourcesIndexRoute
+  '/sources/$sourceId/edit': typeof SourcesSourceIdEditRoute
+  '/sources/$sourceId': typeof SourcesSourceIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  "/": typeof IndexRoute
-  "/eval": typeof EvalRoute
-  "/sinks": typeof SinksRoute
-  "/sources": typeof SourcesRoute
+  '/': typeof IndexRoute
+  '/eval': typeof EvalRoute
+  '/sinks': typeof SinksRoute
+  '/sources': typeof SourcesRouteWithChildren
+  '/sources/new': typeof SourcesNewRoute
+  '/sources/': typeof SourcesIndexRoute
+  '/sources/$sourceId/edit': typeof SourcesSourceIdEditRoute
+  '/sources/$sourceId/': typeof SourcesSourceIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/" | "/eval" | "/sinks" | "/sources"
+  fullPaths:
+    | '/'
+    | '/eval'
+    | '/sinks'
+    | '/sources'
+    | '/sources/new'
+    | '/sources/'
+    | '/sources/$sourceId/edit'
+    | '/sources/$sourceId/'
   fileRoutesByTo: FileRoutesByTo
-  to: "/" | "/eval" | "/sinks" | "/sources"
-  id: "__root__" | "/" | "/eval" | "/sinks" | "/sources"
+  to:
+    | '/'
+    | '/eval'
+    | '/sinks'
+    | '/sources/new'
+    | '/sources'
+    | '/sources/$sourceId/edit'
+    | '/sources/$sourceId'
+  id:
+    | '__root__'
+    | '/'
+    | '/eval'
+    | '/sinks'
+    | '/sources'
+    | '/sources/new'
+    | '/sources/'
+    | '/sources/$sourceId/edit'
+    | '/sources/$sourceId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EvalRoute: typeof EvalRoute
   SinksRoute: typeof SinksRoute
-  SourcesRoute: typeof SourcesRoute
+  SourcesRoute: typeof SourcesRouteWithChildren
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/sources": {
-      id: "/sources"
-      path: "/sources"
-      fullPath: "/sources"
+    '/sources': {
+      id: '/sources'
+      path: '/sources'
+      fullPath: '/sources'
       preLoaderRoute: typeof SourcesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/sinks": {
-      id: "/sinks"
-      path: "/sinks"
-      fullPath: "/sinks"
+    '/sinks': {
+      id: '/sinks'
+      path: '/sinks'
+      fullPath: '/sinks'
       preLoaderRoute: typeof SinksRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/eval": {
-      id: "/eval"
-      path: "/eval"
-      fullPath: "/eval"
+    '/eval': {
+      id: '/eval'
+      path: '/eval'
+      fullPath: '/eval'
       preLoaderRoute: typeof EvalRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/": {
-      id: "/"
-      path: "/"
-      fullPath: "/"
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sources/': {
+      id: '/sources/'
+      path: '/'
+      fullPath: '/sources/'
+      preLoaderRoute: typeof SourcesIndexRouteImport
+      parentRoute: typeof SourcesRoute
+    }
+    '/sources/new': {
+      id: '/sources/new'
+      path: '/new'
+      fullPath: '/sources/new'
+      preLoaderRoute: typeof SourcesNewRouteImport
+      parentRoute: typeof SourcesRoute
+    }
+    '/sources/$sourceId/': {
+      id: '/sources/$sourceId/'
+      path: '/$sourceId'
+      fullPath: '/sources/$sourceId/'
+      preLoaderRoute: typeof SourcesSourceIdIndexRouteImport
+      parentRoute: typeof SourcesRoute
+    }
+    '/sources/$sourceId/edit': {
+      id: '/sources/$sourceId/edit'
+      path: '/$sourceId/edit'
+      fullPath: '/sources/$sourceId/edit'
+      preLoaderRoute: typeof SourcesSourceIdEditRouteImport
+      parentRoute: typeof SourcesRoute
+    }
   }
 }
+
+interface SourcesRouteChildren {
+  SourcesNewRoute: typeof SourcesNewRoute
+  SourcesIndexRoute: typeof SourcesIndexRoute
+  SourcesSourceIdEditRoute: typeof SourcesSourceIdEditRoute
+  SourcesSourceIdIndexRoute: typeof SourcesSourceIdIndexRoute
+}
+
+const SourcesRouteChildren: SourcesRouteChildren = {
+  SourcesNewRoute: SourcesNewRoute,
+  SourcesIndexRoute: SourcesIndexRoute,
+  SourcesSourceIdEditRoute: SourcesSourceIdEditRoute,
+  SourcesSourceIdIndexRoute: SourcesSourceIdIndexRoute,
+}
+
+const SourcesRouteWithChildren =
+  SourcesRoute._addFileChildren(SourcesRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EvalRoute: EvalRoute,
   SinksRoute: SinksRoute,
-  SourcesRoute: SourcesRoute,
+  SourcesRoute: SourcesRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

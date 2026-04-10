@@ -48,3 +48,11 @@ export const EvalResponse = Schema.Struct({
   stderr: Schema.String,
   error: Schema.optional(Schema.String),
 })
+
+export const JSONToFennelRequest = Schema.Struct({
+  content: Schema.String,
+})
+
+export const JSONToFennelResponse = Schema.Struct({
+  fennel: Schema.String,
+})

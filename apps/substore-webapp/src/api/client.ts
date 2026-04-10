@@ -27,6 +27,13 @@ export const getSources = Effect.gen(function* () {
   )
 })
 
+export const getSource = (id: string) =>
+  Effect.gen(function* () {
+    const client = yield* baseClient
+    const response = yield* client.get(`/sources/${id}`)
+    return yield* HttpClientResponse.schemaBodyJson(Schemas.Source)(response)
+  })
+
 export const addSource = (payload: typeof Schemas.AddSourcePayload.Type) =>
   Effect.gen(function* () {
     const client = yield* baseClient
@@ -89,6 +96,20 @@ export const evalScript = (payload: typeof Schemas.EvalRequest.Type) =>
       Effect.flatMap(client.execute)
     )
     return yield* HttpClientResponse.schemaBodyJson(Schemas.EvalResponse)(
+      response
+    )
+  })
+
+export const transformToFennel = (
+  payload: typeof Schemas.JSONToFennelRequest.Type
+) =>
+  Effect.gen(function* () {
+    const client = yield* baseClient
+    const response = yield* HttpClientRequest.post("/utils/json-to-fennel").pipe(
+      HttpClientRequest.bodyJson(payload),
+      Effect.flatMap(client.execute)
+    )
+    return yield* HttpClientResponse.schemaBodyJson(Schemas.JSONToFennelResponse)(
       response
     )
   })

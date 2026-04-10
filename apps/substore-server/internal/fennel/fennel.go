@@ -132,6 +132,27 @@ func Eval(L *lua.LState, script string) (lua.LValue, error) {
 	return val, err
 }
 
+func ToFennel(L *lua.LState, v any) (string, error) {
+	fennel := L.GetGlobal("fennel")
+	view := L.GetField(fennel, "view")
+
+	lVal := MapToLua(L, v)
+
+	err := L.CallByParam(lua.P{
+		Fn:      view,
+		NRet:    1,
+		Protect: true,
+	}, lVal)
+
+	if err != nil {
+		return "", err
+	}
+
+	ret := L.Get(-1)
+	L.Pop(1)
+	return ret.String(), nil
+}
+
 // MapToGo converts a gopher-lua LValue to a Go value.
 func MapToGo(v lua.LValue) any {
 	switch v.Type() {

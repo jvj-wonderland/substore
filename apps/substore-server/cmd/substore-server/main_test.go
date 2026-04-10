@@ -221,3 +221,25 @@ func TestEval(t *testing.T) {
 	assert.Equal(t, float64(2), resp.Result) // 1 source + 1 = 2
 	assert.Equal(t, "hello\n", resp.Stdout)
 }
+
+func TestJSONToFennel(t *testing.T) {
+	s, dbFile := setupTestServer(t)
+	defer teardownTestServer(s, dbFile)
+
+	reqBody := JSONToFennelRequest{
+		Content: `{"foo": "bar", "list": [1, 2, 3]}`,
+	}
+	reqBytes, _ := json.Marshal(reqBody)
+
+	req := httptest.NewRequest("POST", "/api/utils/json-to-fennel", bytes.NewReader(reqBytes))
+	w := httptest.NewRecorder()
+	s.handleJSONToFennel(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var resp JSONToFennelResponse
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.Contains(t, resp.Fennel, `:foo "bar"`)
+	assert.Contains(t, resp.Fennel, `:list [1 2 3]`)
+}
+

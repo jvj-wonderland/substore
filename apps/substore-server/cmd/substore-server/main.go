@@ -51,6 +51,7 @@ func main() {
 	apiMux := http.NewServeMux()
 	apiMux.HandleFunc("POST /sources", s.handleAddSource)
 	apiMux.HandleFunc("GET /sources", s.handleGetSources)
+	apiMux.HandleFunc("GET /sources/{id}", s.handleGetSource)
 	apiMux.HandleFunc("PUT /sources/{id}", s.handleUpdateSource)
 	apiMux.HandleFunc("PATCH /sources/{id}", s.handleUpdateSource)
 
@@ -62,6 +63,7 @@ func main() {
 	apiMux.HandleFunc("POST /eval", s.handleEval)
 	apiMux.HandleFunc("GET /tasks", s.handleGetTasks)
 	apiMux.HandleFunc("POST /tasks/{id}/upload", s.handleUploadTaskResult)
+	apiMux.HandleFunc("POST /utils/json-to-fennel", s.handleJSONToFennel)
 
 	// Combined Mux for Management Port
 	managementMux := http.NewServeMux()
@@ -242,6 +244,53 @@ func (s *Server) handleGetSources(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
+}
+
+func (s *Server) handleGetSource(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	source, err := s.storage.GetSource(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(s.toSourceResponse(source))
+}
+
+type JSONToFennelRequest struct {
+	Content string `json:"content"`
+}
+
+type JSONToFennelResponse struct {
+	Fennel string `json:"fennel"`
+}
+
+func (s *Server) handleJSONToFennel(w http.ResponseWriter, r *http.Request) {
+	var req JSONToFennelRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var content any
+	if err := json.Unmarshal([]byte(req.Content), &content); err != nil {
+		if err := yaml.Unmarshal([]byte(req.Content), &content); err != nil {
+			http.Error(w, "invalid JSON or YAML: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
+	L := s.fennel.Get()
+	defer s.fennel.Put(L)
+
+	fennelStr, err := fennel.ToFennel(L, content)
+	if err != nil {
+		http.Error(w, "failed to convert to fennel: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(JSONToFennelResponse{Fennel: fennelStr})
 }
 
 func (s *Server) handleAddSink(w http.ResponseWriter, r *http.Request) {
