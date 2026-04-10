@@ -3,29 +3,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Effect } from "effect"
 import * as API from "@/api/client"
 import { Button } from "@/components/ui/button"
-import { RiArrowLeftLine, RiPlayLine, RiSaveLine, RiTerminalLine, RiCodeLine, RiFileTextLine, RiErrorWarningLine, RiRefreshLine } from "@remixicon/react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { RiArrowLeftLine, RiPlayLine, RiSaveLine, RiRefreshLine } from "@remixicon/react"
 import { useState, useEffect } from "react"
-import { CodeBlock } from "@/components/code-block"
-import CodeMirror from "@uiw/react-codemirror"
-import { language_support } from "@nextjournal/clojure-mode"
-import { githubDark, githubLight } from "@uiw/codemirror-theme-github"
-import { useTheme } from "@/components/theme-provider"
 import { formatError } from "@/lib/effect-utils"
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable"
+import { useMediaQuery } from "@/hooks/use-media-query"
+import { SinkEditorPanel } from "@/components/sinks/sink-editor-panel"
+import { SinkPreviewPanel } from "@/components/sinks/sink-preview-panel"
 
 export const Route = createFileRoute("/sinks/$sinkId/edit")({
   component: EditSinkPage,
@@ -35,7 +23,7 @@ function EditSinkPage() {
   const { sinkId } = Route.useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { theme } = useTheme()
+  const isDesktop = useMediaQuery("(min-width: 768px)")
   
   const [format, setFormat] = useState<API.SinkFormat>("json")
   const [script, setScript] = useState("")
@@ -57,8 +45,6 @@ function EditSinkPage() {
       setScript(sink.pipeline_script)
     }
   }, [sink])
-
-  const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
 
   const evalMutation = useMutation({
     mutationFn: (payload: typeof API.EvalRequest.Type) =>
@@ -102,192 +88,62 @@ function EditSinkPage() {
     })
   }
 
-  if (isLoading) return <div className="p-8 text-center animate-pulse text-muted-foreground font-medium uppercase tracking-widest">Loading Sink Data...</div>
+  if (isLoading) return <div className="p-8 text-center animate-pulse text-muted-foreground font-medium uppercase tracking-widest text-xs sm:text-sm">Loading Sink Data...</div>
   if (error || !sink) return (
     <div className="p-8 text-destructive bg-destructive/5 m-8 border border-destructive/20 rounded-lg">
       <h2 className="text-lg font-bold">Error Loading Sink</h2>
-      <pre className="text-xs mt-2">{error ? formatError(error) : "Sink not found"}</pre>
+      <pre className="text-[10px] sm:text-xs mt-2">{error ? formatError(error) : "Sink not found"}</pre>
       <Button variant="outline" className="mt-4" render={<Link to="/sinks" />}>Back to Sinks</Button>
     </div>
   )
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <div className="border-b bg-background/95 backdrop-blur px-8 py-4 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" render={<Link to="/sinks" />}>
-            <RiArrowLeftLine className="h-5 w-5" />
+    <div className="flex flex-col h-full bg-background overflow-hidden">
+      <div className="border-b bg-background/95 backdrop-blur px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between z-10 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <Button variant="ghost" size="icon-sm" render={<Link to="/sinks" />}>
+            <RiArrowLeftLine className="h-4 sm:h-5 w-4 sm:w-5" />
           </Button>
           <div>
-            <h2 className="text-xl font-bold tracking-tight">Edit Sink</h2>
-            <p className="text-[10px] text-primary uppercase tracking-widest font-bold">Editing: {sinkId}</p>
+            <h2 className="text-sm sm:text-xl font-bold tracking-tight">Edit Sink</h2>
+            <p className="text-[8px] sm:text-[10px] text-primary uppercase tracking-widest font-bold">Editing: {sinkId}</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleRun} disabled={evalMutation.isPending}>
-            {evalMutation.isPending ? <RiRefreshLine className="mr-2 h-4 w-4 animate-spin" /> : <RiPlayLine className="mr-2 h-4 w-4" />}
-            Run
+          <Button variant="outline" size="sm" onClick={handleRun} disabled={evalMutation.isPending}>
+            {evalMutation.isPending ? <RiRefreshLine className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4 animate-spin" /> : <RiPlayLine className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />}
+            <span className="text-[10px] sm:text-xs">Run</span>
           </Button>
-          <Button onClick={(e) => handleSave(e as any)} disabled={updateMutation.isPending}>
-            <RiSaveLine className="mr-2 h-4 w-4" />
-            Save Changes
+          <Button size="sm" onClick={(e) => handleSave(e as any)} disabled={updateMutation.isPending}>
+            <RiSaveLine className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
+            <span className="text-[10px] sm:text-xs">Save</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden flex">
-        {/* Editor Pane */}
-        <div className="w-1/2 border-r flex flex-col min-h-0 bg-zinc-950/5">
-          <div className="p-6 space-y-4 border-b bg-background/50">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2 opacity-60">
-                <Label htmlFor="name">Sink Name (slug)</Label>
-                <Input
-                  id="name"
-                  value={sinkId}
-                  disabled
-                  className="font-mono text-xs cursor-not-allowed bg-muted"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="format">Output Format</Label>
-                <Select
-                  value={format}
-                  onValueChange={(v) => v && setFormat(v as API.SinkFormat)}
-                >
-                  <SelectTrigger id="format" className="font-mono text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="json">JSON</SelectItem>
-                    <SelectItem value="yaml">YAML</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex-1 overflow-hidden flex flex-col">
-            <div className="bg-muted/30 px-4 py-1 border-b flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pipeline Script (Fennel)</span>
-            </div>
-            <div className="flex-1 overflow-auto">
-              <CodeMirror
-                value={script}
-                height="100%"
-                theme={isDark ? githubDark : githubLight}
-                extensions={[language_support]}
-                onChange={(val) => setScript(val)}
-                className="text-xs h-full"
-                basicSetup={{
-                  lineNumbers: true,
-                  foldGutter: true,
-                  dropCursor: true,
-                  allowMultipleSelections: true,
-                  indentOnInput: true,
-                }}
-              />
-            </div>
-          </div>
-        </div>
+      <div className="flex-1 min-h-0">
+        <ResizablePanelGroup orientation={isDesktop ? "horizontal" : "vertical"} className="h-full">
+          <ResizablePanel defaultSize={50} minSize={20}>
+            <SinkEditorPanel
+              name={sinkId}
+              nameDisabled
+              format={format}
+              setFormat={setFormat}
+              script={script}
+              setScript={setScript}
+            />
+          </ResizablePanel>
 
-        {/* Preview Pane */}
-        <div className="w-1/2 overflow-y-auto p-6 space-y-4 bg-muted/10 scrollbar-themed text-foreground">
-          {!evalResult && !evalMutation.isPending && (
-            <div className="h-full flex flex-col items-center justify-center text-muted-foreground/40 gap-4 opacity-60">
-              <RiPlayLine className="h-12 w-12" />
-              <p className="text-sm font-medium italic">Click "Run" to preview the execution result</p>
-            </div>
-          )}
+          <ResizableHandle withHandle />
 
-          {evalMutation.isPending && (
-            <div className="h-full flex flex-col items-center justify-center text-primary/40 gap-4 animate-pulse">
-              <RiTerminalLine className="h-12 w-12" />
-              <p className="text-sm font-bold tracking-widest uppercase">Executing Pipeline...</p>
-            </div>
-          )}
-
-          {evalResult && (
-            <div className="space-y-4">
-              {evalResult.error && (
-                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 space-y-2">
-                  <div className="flex items-center gap-2 text-destructive font-bold text-xs uppercase tracking-wider">
-                    <RiErrorWarningLine className="h-4 w-4" />
-                    Execution Error
-                  </div>
-                  <pre className="text-xs font-mono whitespace-pre-wrap break-all bg-zinc-950 p-3 rounded border border-white/5 text-destructive-foreground">
-                    {evalResult.error}
-                  </pre>
-                </div>
-              )}
-
-              <Accordion multiple defaultValue={["result", "console"]}>
-                <AccordionItem value="result">
-                  <AccordionTrigger>
-                    <div className="flex items-center gap-2">
-                      <RiFileTextLine className="h-4 w-4 text-blue-500" />
-                      <span>RESULT ({format.toUpperCase()})</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="bg-zinc-950 rounded-md p-4 overflow-auto max-h-[500px]">
-                      {evalResult.result_string ? (
-                        <CodeBlock code={evalResult.result_string} lang={format} />
-                      ) : (
-                        <div className="text-muted-foreground/50 italic">No result generated</div>
-                      )}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="lua">
-                  <AccordionTrigger>
-                    <div className="flex items-center gap-2">
-                      <RiCodeLine className="h-4 w-4 text-purple-500" />
-                      <span>COMPILED LUA</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="bg-zinc-950 rounded-md p-4 overflow-auto max-h-[500px]">
-                      {evalResult.compiled_script ? (
-                        <CodeBlock code={evalResult.compiled_script} lang="lua" />
-                      ) : (
-                        <div className="text-muted-foreground/50 italic">No lua code generated</div>
-                      )}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-
-                {(evalResult.stdout || evalResult.stderr) && (
-                  <AccordionItem value="console">
-                    <AccordionTrigger>
-                      <div className="flex items-center gap-2">
-                        <RiTerminalLine className="h-4 w-4 text-amber-500" />
-                        <span>CONSOLE OUTPUT</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="bg-zinc-950 rounded-md p-4 space-y-4 font-mono text-xs">
-                        {evalResult.stdout && (
-                          <div className="space-y-1">
-                            <div className="text-[10px] uppercase font-bold text-muted-foreground/50">STDOUT</div>
-                            <pre className="text-emerald-500 whitespace-pre-wrap">{evalResult.stdout}</pre>
-                          </div>
-                        )}
-                        {evalResult.stderr && (
-                          <div className="space-y-1">
-                            <div className="text-[10px] uppercase font-bold text-muted-foreground/50">STDERR</div>
-                            <pre className="text-rose-500 whitespace-pre-wrap">{evalResult.stderr}</pre>
-                          </div>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
-              </Accordion>
-            </div>
-          )}
-        </div>
+          <ResizablePanel defaultSize={50} minSize={20}>
+            <SinkPreviewPanel
+              evalResult={evalResult}
+              isPending={evalMutation.isPending}
+              format={format}
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </div>
   )
