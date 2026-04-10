@@ -236,7 +236,7 @@ func (s *Server) handleGetSources(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	var resp []SourceResponse
+	resp := []SourceResponse{}
 	for _, source := range sources {
 		resp = append(resp, s.toSourceResponse(source))
 	}
@@ -321,7 +321,7 @@ func (s *Server) handleGetSinks(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	var resp []SinkResponse
+	resp := []SinkResponse{}
 	for _, sink := range sinks {
 		resp = append(resp, s.toSinkResponse(sink))
 	}
@@ -563,11 +563,15 @@ func (s *Server) handleEval(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) toSourceResponse(source *storage.Source) SourceResponse {
+	tags := source.Tags
+	if tags == nil {
+		tags = []string{}
+	}
 	return SourceResponse{
 		ID:             source.ID,
 		Type:           source.Type,
 		Name:           source.Name,
-		Tags:           source.Tags,
+		Tags:           tags,
 		URL:            source.URL,
 		FetchMode:      source.FetchMode,
 		UpdateInterval: source.UpdateInterval,

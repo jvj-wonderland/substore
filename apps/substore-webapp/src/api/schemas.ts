@@ -1,9 +1,9 @@
 import { Schema } from "effect"
 
-export const FetchMode = Schema.Literal(0, 1)
+export const FetchMode = Schema.Literal("server", "browser")
 export type FetchMode = typeof FetchMode.Type
 
-export const SinkFormat = Schema.Literal(0, 1)
+export const SinkFormat = Schema.Literal("json", "yaml")
 export type SinkFormat = typeof SinkFormat.Type
 
 export const Source = Schema.Struct({
