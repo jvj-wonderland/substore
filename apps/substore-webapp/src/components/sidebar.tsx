@@ -1,17 +1,23 @@
-import { Link } from "@tanstack/react-router"
+import { Link, useRouterState } from "@tanstack/react-router"
 import {
   RiDatabase2Line,
   RiTerminalBoxLine,
   RiSettings4Line,
 } from "@remixicon/react"
-import { cn } from "@/lib/utils"
+import {
+  Sidebar as UISidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar"
 
-interface SidebarProps {
-  className?: string
-  onLinkClick?: () => void
-}
+export function AppSidebar() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const { isMobile, setOpenMobile } = useSidebar()
 
-export function Sidebar({ className, onLinkClick }: SidebarProps) {
   const links = [
     { to: "/sources", label: "Sources", icon: RiDatabase2Line },
     { to: "/sinks", label: "Sinks", icon: RiSettings4Line },
@@ -19,24 +25,33 @@ export function Sidebar({ className, onLinkClick }: SidebarProps) {
   ]
 
   return (
-    <aside className={cn("bg-muted/40 flex flex-col", className)}>
-      <div className="border-b p-6">
+    <UISidebar className="border-r" collapsible="offcanvas">
+      <SidebarHeader className="border-b p-6">
         <h1 className="text-xl font-bold tracking-tight">SubStore</h1>
-      </div>
-      <nav className="flex-1 space-y-1 p-4">
+      </SidebarHeader>
+      <SidebarContent className="p-4">
+        <SidebarMenu>
         {links.map((link) => (
-          <Link
-            key={link.to}
-            to={link.to}
-            onClick={onLinkClick}
-            className="hover:bg-muted flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors"
-            activeProps={{ className: "bg-muted font-medium text-primary" }}
-          >
-            <link.icon className="h-5 w-5 shrink-0" />
-            <span>{link.label}</span>
-          </Link>
+          <SidebarMenuItem key={link.to}>
+            <SidebarMenuButton
+              render={<Link to={link.to} />}
+              isActive={
+                pathname === link.to || pathname.startsWith(`${link.to}/`)
+              }
+              className="gap-3 rounded-md px-3 py-2 text-sm [&_svg]:size-5"
+              onClick={() => {
+                if (isMobile) {
+                  setOpenMobile(false)
+                }
+              }}
+            >
+              <link.icon className="shrink-0" />
+              <span>{link.label}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         ))}
-      </nav>
-    </aside>
+        </SidebarMenu>
+      </SidebarContent>
+    </UISidebar>
   )
 }
