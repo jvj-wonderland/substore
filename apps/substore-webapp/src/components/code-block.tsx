@@ -8,6 +8,19 @@ interface CodeBlockProps {
   className?: string
 }
 
+function makeShikiBackgroundTransparent(html: string) {
+  return html
+    .replace(
+      /style="([^"]*?)background-color:[^;"]+;?([^"]*?)"/g,
+      (_match, before: string, after: string) => {
+        const style = `${before}${after}`.trim()
+        return style ? `style="${style}"` : ""
+      }
+    )
+    .replace(/<pre([^>]*?)style=""/g, "<pre$1")
+    .replace(/<code([^>]*?)style=""/g, "<code$1")
+}
+
 let highlighterPromise: Promise<Highlighter> | null = null
 
 function getHighlighter() {
@@ -62,7 +75,7 @@ export function CodeBlock({ code, lang, className }: CodeBlockProps) {
         lang,
         theme: resolvedTheme === "dark" ? "github-dark" : "github-light",
       })
-      setHtml(highlighted)
+      setHtml(makeShikiBackgroundTransparent(highlighted))
       setLoading(false)
     })
 
