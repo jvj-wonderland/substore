@@ -33,14 +33,20 @@ export function SinkEditorPanel({
   setScript,
 }: SinkEditorPanelProps) {
   const { theme } = useTheme()
-  const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches)
 
   return (
-    <div className="h-full flex flex-col min-h-0 bg-zinc-950/5">
-      <div className="p-4 sm:p-6 space-y-4 border-b bg-background/50">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="flex h-full min-h-0 flex-col bg-zinc-950/5">
+      <div className="bg-background/50 space-y-4 border-b p-4 sm:p-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="grid gap-2">
-            <Label htmlFor="name" className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-bold">
+            <Label
+              htmlFor="name"
+              className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase sm:text-xs"
+            >
               Sink Name (slug)
             </Label>
             <Input
@@ -50,34 +56,46 @@ export function SinkEditorPanel({
               disabled={nameDisabled}
               placeholder="my-awesome-sink"
               required
-              className="font-mono text-[10px] sm:text-xs h-8 sm:h-9 bg-background shadow-none focus-visible:ring-1"
+              className="bg-background h-8 font-mono text-[10px] shadow-none focus-visible:ring-1 sm:h-9 sm:text-xs"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="format" className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-bold">
+            <Label
+              htmlFor="format"
+              className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase sm:text-xs"
+            >
               Output Format
             </Label>
             <Select
               value={format}
               onValueChange={(v) => v && setFormat(v as API.SinkFormat)}
             >
-              <SelectTrigger id="format" className="font-mono text-[10px] sm:text-xs h-8 sm:h-9 bg-background shadow-none focus-visible:ring-1">
+              <SelectTrigger
+                id="format"
+                className="bg-background h-8 font-mono text-[10px] shadow-none focus-visible:ring-1 sm:h-9 sm:text-xs"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="json" className="text-[10px] sm:text-xs">JSON</SelectItem>
-                <SelectItem value="yaml" className="text-[10px] sm:text-xs">YAML</SelectItem>
+                <SelectItem value="json" className="text-[10px] sm:text-xs">
+                  JSON
+                </SelectItem>
+                <SelectItem value="yaml" className="text-[10px] sm:text-xs">
+                  YAML
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
       </div>
-      
-      <div className="flex-1 min-h-0 flex flex-col">
-        <div className="bg-muted/30 px-4 py-1 border-b flex items-center justify-between shrink-0">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pipeline Script (Fennel)</span>
+
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="bg-muted/30 flex shrink-0 items-center justify-between border-b px-4 py-1">
+          <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+            Pipeline Script (Fennel)
+          </span>
         </div>
-        <div className="flex-1 min-h-0 overflow-hidden relative">
+        <div className="relative min-h-0 flex-1 overflow-hidden">
           <div className="absolute inset-0">
             <CodeMirror
               value={script}
@@ -85,7 +103,7 @@ export function SinkEditorPanel({
               theme={isDark ? githubDark : githubLight}
               extensions={[language_support]}
               onChange={(val) => setScript(val)}
-              className="text-[10px] sm:text-xs h-full"
+              className="h-full text-[10px] sm:text-xs"
               basicSetup={{
                 lineNumbers: true,
                 foldGutter: true,

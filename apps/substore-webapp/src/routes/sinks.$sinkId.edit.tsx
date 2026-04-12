@@ -3,7 +3,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Effect } from "effect"
 import * as API from "@/api/client"
 import { Button } from "@/components/ui/button"
-import { RiArrowLeftLine, RiPlayLine, RiSaveLine, RiRefreshLine } from "@remixicon/react"
+import {
+  RiArrowLeftLine,
+  RiPlayLine,
+  RiSaveLine,
+  RiRefreshLine,
+} from "@remixicon/react"
 import { useState, useEffect } from "react"
 import { formatError } from "@/lib/effect-utils"
 import {
@@ -24,19 +29,26 @@ function EditSinkPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const isDesktop = useMediaQuery("(min-width: 768px)")
-  
+
   const [format, setFormat] = useState<API.SinkFormat>("json")
   const [script, setScript] = useState("")
-  const [evalResult, setEvalResult] = useState<typeof API.EvalResponse.Type | null>(null)
+  const [evalResult, setEvalResult] = useState<
+    typeof API.EvalResponse.Type | null
+  >(null)
 
-  const { data: sink, isLoading, error } = useQuery({
+  const {
+    data: sink,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["sinks", sinkId],
-    queryFn: () => Effect.runPromise(
-      API.getSinks.pipe(
-        Effect.map(sinks => sinks.find(s => s.name === sinkId)),
-        Effect.provide(API.clientLayer)
-      )
-    )
+    queryFn: () =>
+      Effect.runPromise(
+        API.getSinks.pipe(
+          Effect.map((sinks) => sinks.find((s) => s.name === sinkId)),
+          Effect.provide(API.clientLayer)
+        )
+      ),
   })
 
   useEffect(() => {
@@ -88,41 +100,75 @@ function EditSinkPage() {
     })
   }
 
-  if (isLoading) return <div className="p-8 text-center animate-pulse text-muted-foreground font-medium uppercase tracking-widest text-xs sm:text-sm">Loading Sink Data...</div>
-  if (error || !sink) return (
-    <div className="p-8 text-destructive bg-destructive/5 m-8 border border-destructive/20 rounded-lg">
-      <h2 className="text-lg font-bold">Error Loading Sink</h2>
-      <pre className="text-[10px] sm:text-xs mt-2">{error ? formatError(error) : "Sink not found"}</pre>
-      <Button variant="outline" className="mt-4" render={<Link to="/sinks" />}>Back to Sinks</Button>
-    </div>
-  )
+  if (isLoading)
+    return (
+      <div className="text-muted-foreground animate-pulse p-8 text-center text-xs font-medium tracking-widest uppercase sm:text-sm">
+        Loading Sink Data...
+      </div>
+    )
+  if (error || !sink)
+    return (
+      <div className="text-destructive bg-destructive/5 border-destructive/20 m-8 rounded-lg border p-8">
+        <h2 className="text-lg font-bold">Error Loading Sink</h2>
+        <pre className="mt-2 text-[10px] sm:text-xs">
+          {error ? formatError(error) : "Sink not found"}
+        </pre>
+        <Button
+          variant="outline"
+          className="mt-4"
+          render={<Link to="/sinks" />}
+        >
+          Back to Sinks
+        </Button>
+      </div>
+    )
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
-      <div className="border-b bg-background/95 backdrop-blur px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between z-10 shrink-0">
+    <div className="bg-background flex h-full flex-col overflow-hidden">
+      <div className="bg-background/95 z-10 flex shrink-0 items-center justify-between border-b px-4 py-3 backdrop-blur sm:px-8 sm:py-4">
         <div className="flex items-center gap-2 sm:gap-4">
           <Button variant="ghost" size="icon-sm" render={<Link to="/sinks" />}>
-            <RiArrowLeftLine className="h-4 sm:h-5 w-4 sm:w-5" />
+            <RiArrowLeftLine className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
           <div>
-            <h2 className="text-sm sm:text-xl font-bold tracking-tight">Edit Sink</h2>
-            <p className="text-[8px] sm:text-[10px] text-primary uppercase tracking-widest font-bold">Editing: {sinkId}</p>
+            <h2 className="text-sm font-bold tracking-tight sm:text-xl">
+              Edit Sink
+            </h2>
+            <p className="text-primary text-[8px] font-bold tracking-widest uppercase sm:text-[10px]">
+              Editing: {sinkId}
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleRun} disabled={evalMutation.isPending}>
-            {evalMutation.isPending ? <RiRefreshLine className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4 animate-spin" /> : <RiPlayLine className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRun}
+            disabled={evalMutation.isPending}
+          >
+            {evalMutation.isPending ? (
+              <RiRefreshLine className="mr-1 h-3 w-3 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
+            ) : (
+              <RiPlayLine className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+            )}
             <span className="text-[10px] sm:text-xs">Run</span>
           </Button>
-          <Button size="sm" onClick={(e) => handleSave(e as any)} disabled={updateMutation.isPending}>
-            <RiSaveLine className="mr-1 sm:mr-2 h-3 sm:h-4 w-3 sm:w-4" />
+          <Button
+            size="sm"
+            onClick={(e) => handleSave(e as any)}
+            disabled={updateMutation.isPending}
+          >
+            <RiSaveLine className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
             <span className="text-[10px] sm:text-xs">Save</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0">
-        <ResizablePanelGroup orientation={isDesktop ? "horizontal" : "vertical"} className="h-full">
+      <div className="min-h-0 flex-1">
+        <ResizablePanelGroup
+          orientation={isDesktop ? "horizontal" : "vertical"}
+          className="h-full"
+        >
           <ResizablePanel defaultSize={50} minSize={20}>
             <SinkEditorPanel
               name={sinkId}

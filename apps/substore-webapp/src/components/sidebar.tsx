@@ -19,7 +19,7 @@ export function Sidebar({ className, onLinkClick }: SidebarProps) {
   ]
 
   return (
-    <aside className={cn("flex flex-col bg-muted/40", className)}>
+    <aside className={cn("bg-muted/40 flex flex-col", className)}>
       <div className="border-b p-6">
         <h1 className="text-xl font-bold tracking-tight">SubStore</h1>
       </div>

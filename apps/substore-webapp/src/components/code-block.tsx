@@ -24,6 +24,32 @@ export function CodeBlock({ code, lang, className }: CodeBlockProps) {
   const [html, setHtml] = useState<string>("")
   const [loading, setLoading] = useState(true)
   const { theme } = useTheme()
+  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">(() =>
+    theme === "system"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light"
+      : theme
+  )
+
+  useEffect(() => {
+    if (theme !== "system") {
+      setResolvedTheme(theme)
+      return
+    }
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+    const updateResolvedTheme = () => {
+      setResolvedTheme(mediaQuery.matches ? "dark" : "light")
+    }
+
+    updateResolvedTheme()
+    mediaQuery.addEventListener("change", updateResolvedTheme)
+
+    return () => {
+      mediaQuery.removeEventListener("change", updateResolvedTheme)
+    }
+  }, [theme])
 
   useEffect(() => {
     let isMounted = true
@@ -31,14 +57,6 @@ export function CodeBlock({ code, lang, className }: CodeBlockProps) {
 
     getHighlighter().then((highlighter) => {
       if (!isMounted) return
-
-      // Determine the theme to use
-      let resolvedTheme = theme
-      if (theme === "system") {
-        resolvedTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light"
-      }
 
       const highlighted = highlighter.codeToHtml(code, {
         lang,
@@ -51,12 +69,12 @@ export function CodeBlock({ code, lang, className }: CodeBlockProps) {
     return () => {
       isMounted = false
     }
-  }, [code, lang, theme])
+  }, [code, lang, resolvedTheme])
 
   if (loading) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-muted/50 rounded-md animate-pulse">
-        <span className="text-xs text-muted-foreground">Highlighting...</span>
+      <div className="bg-muted/50 flex h-full w-full animate-pulse items-center justify-center rounded-md">
+        <span className="text-muted-foreground text-xs">Highlighting...</span>
       </div>
     )
   }

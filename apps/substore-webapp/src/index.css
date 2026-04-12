@@ -130,11 +130,3 @@
     @apply font-serif;
     }
 }
-
-.cm-theme, .cm-editor {
-  height: 100%;
-}
-
-.cm-scroller {
-  overflow: auto;
-}

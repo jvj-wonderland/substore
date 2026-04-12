@@ -105,13 +105,12 @@ export const transformToFennel = (
 ) =>
   Effect.gen(function* () {
     const client = yield* baseClient
-    const response = yield* HttpClientRequest.post("/utils/json-to-fennel").pipe(
-      HttpClientRequest.bodyJson(payload),
-      Effect.flatMap(client.execute)
-    )
-    return yield* HttpClientResponse.schemaBodyJson(Schemas.JSONToFennelResponse)(
-      response
-    )
+    const response = yield* HttpClientRequest.post(
+      "/utils/json-to-fennel"
+    ).pipe(HttpClientRequest.bodyJson(payload), Effect.flatMap(client.execute))
+    return yield* HttpClientResponse.schemaBodyJson(
+      Schemas.JSONToFennelResponse
+    )(response)
   })
 
 export const clientLayer = FetchHttpClient.layer

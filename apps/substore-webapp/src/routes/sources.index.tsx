@@ -3,7 +3,12 @@ import { useQuery } from "@tanstack/react-query"
 import { Effect } from "effect"
 import * as API from "@/api/client"
 import { Button } from "@/components/ui/button"
-import { RiAddLine, RiRefreshLine, RiEyeLine, RiEditLine } from "@remixicon/react"
+import {
+  RiAddLine,
+  RiRefreshLine,
+  RiEyeLine,
+  RiEditLine,
+} from "@remixicon/react"
 import {
   Card,
   CardContent,
@@ -36,7 +41,7 @@ function SourcesIndexPage() {
     return (
       <div className="text-destructive p-8">
         <h2 className="text-lg font-bold">Error loading sources</h2>
-        <pre className="mt-2 whitespace-pre-wrap text-sm">
+        <pre className="mt-2 text-sm whitespace-pre-wrap">
           {formatError(error)}
         </pre>
       </div>
@@ -71,13 +76,8 @@ function SourcesIndexPage() {
   )
 }
 
-function SourceCard({
-  source,
-}: {
-  source: API.Source
-}) {
-  const fetchModeLabel =
-    source.fetch_mode === "browser" ? "Browser" : "Server"
+function SourceCard({ source }: { source: API.Source }) {
+  const fetchModeLabel = source.fetch_mode === "browser" ? "Browser" : "Server"
 
   return (
     <Card className="flex flex-col">
