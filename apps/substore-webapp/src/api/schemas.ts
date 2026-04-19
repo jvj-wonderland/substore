@@ -21,6 +21,7 @@ export type Source = typeof Source.Type
 
 export const Sink = Schema.Struct({
   name: Schema.String,
+  secret: Schema.String,
   sink_format: SinkFormat,
   pipeline_script: Schema.String,
 })
@@ -33,6 +34,7 @@ export const AddSourcePayload = Schema.Struct({
 
 export const AddSinkPayload = Schema.Struct({
   name: Schema.String,
+  secret: Schema.String,
   sink_format: SinkFormat,
   pipeline_script: Schema.String,
 })

@@ -103,6 +103,7 @@ type LocalSubscriptionSource struct {
 
 type SubscriptionSink struct {
 	Name                   string
+	Secret                 string
 	SinkFormat             SinkFormat
 	PipelineScript         string
 	CompiledPipelineScript string

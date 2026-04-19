@@ -146,3 +146,17 @@ func (s *Storage) GetAllSinks() ([]*substoreserver.SubscriptionSink, error) {
 	}
 	return sinks, nil
 }
+
+func (s *Storage) DeleteSource(id string) error {
+	return s.db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(bucketSources)
+		return b.Delete([]byte(id))
+	})
+}
+
+func (s *Storage) DeleteSink(name string) error {
+	return s.db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(bucketSinks)
+		return b.Delete([]byte(name))
+	})
+}

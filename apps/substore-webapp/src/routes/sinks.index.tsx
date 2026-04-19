@@ -93,7 +93,9 @@ function SinksIndexPage() {
 }
 
 function SinkCard({ sink }: { sink: API.Sink }) {
-  const executionUrl = `http://localhost:8001/${sink.name}`
+  const executionApiBase =
+    import.meta.env.VITE_EXECUTION_API_URL || `${window.location.hostname}:8001`
+  const executionUrl = `http://substore:${sink.secret}@${executionApiBase}/${sink.name}`
 
   return (
     <Card className="group/sink flex flex-col">

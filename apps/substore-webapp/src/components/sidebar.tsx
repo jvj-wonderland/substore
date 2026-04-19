@@ -1,7 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router"
 import {
   RiDatabase2Line,
-  RiTerminalBoxLine,
   RiSettings4Line,
 } from "@remixicon/react"
 import {
@@ -23,7 +22,6 @@ export function AppSidebar() {
   const links = [
     { to: "/sources", label: "Sources", icon: RiDatabase2Line },
     { to: "/sinks", label: "Sinks", icon: RiSettings4Line },
-    { to: "/eval", label: "Eval", icon: RiTerminalBoxLine },
   ]
 
   return (

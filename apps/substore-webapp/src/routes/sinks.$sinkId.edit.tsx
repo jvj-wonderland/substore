@@ -8,6 +8,7 @@ import {
   RiPlayLine,
   RiSaveLine,
   RiRefreshLine,
+  RiDeleteBinLine,
 } from "@remixicon/react"
 import { useState } from "react"
 import { formatError } from "@/lib/effect-utils"
@@ -16,6 +17,17 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { SinkEditorPanel } from "@/components/sinks/sink-editor-panel"
 import { SinkPreviewPanel } from "@/components/sinks/sink-preview-panel"
@@ -32,6 +44,7 @@ function EditSinkPage() {
   const isDesktop = useMediaQuery("(min-width: 768px)")
 
   const [format, setFormat] = useState<API.SinkFormat>("json")
+  const [secret, setSecret] = useState("")
   const [script, setScript] = useState("")
   const [evalResult, setEvalResult] = useState<
     typeof API.EvalResponse.Type | null
@@ -53,6 +66,7 @@ function EditSinkPage() {
   if (sinkQuery.data && sinkQuery.data !== prevSink) {
     setPrevSink(sinkQuery.data)
     setFormat(sinkQuery.data.sink_format)
+    setSecret(sinkQuery.data.secret)
     setScript(sinkQuery.data.pipeline_script)
   }
 
@@ -85,6 +99,17 @@ function EditSinkPage() {
     },
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: () =>
+      Effect.runPromise(
+        API.deleteSink(sinkId).pipe(Effect.provide(API.clientLayer))
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sinks"] })
+      navigate({ to: "/sinks" })
+    },
+  })
+
   const handleRun = () => {
     evalMutation.mutate({ script, sink_format: format })
   }
@@ -93,6 +118,7 @@ function EditSinkPage() {
     e.preventDefault()
     updateMutation.mutate({
       name: sinkId,
+      secret,
       sink_format: format,
       pipeline_script: script,
     })
@@ -155,6 +181,36 @@ function EditSinkPage() {
               </div>
             </div>
             <div className="flex gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger
+                  render={
+                    <Button variant="destructive" size="sm">
+                      <RiDeleteBinLine className="h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Delete</span>
+                    </Button>
+                  }
+                />
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete the sink "{sinkId}". This
+                      action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteMutation.mutate()}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               <Button
                 variant="outline"
                 size="sm"
@@ -188,6 +244,8 @@ function EditSinkPage() {
                 <SinkEditorPanel
                   name={sinkId}
                   nameDisabled
+                  secret={secret}
+                  setSecret={setSecret}
                   format={format}
                   setFormat={setFormat}
                   script={script}

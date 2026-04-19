@@ -114,6 +114,10 @@ func TestAddSinkAndExecute(t *testing.T) {
 	s.handleAddSink(wSink, req)
 	assert.Equal(t, http.StatusOK, wSink.Code, "Adding sink failed: "+wSink.Body.String())
 
+	var sinkResp SinkResponse
+	json.Unmarshal(wSink.Body.Bytes(), &sinkResp)
+	assert.NotEmpty(t, sinkResp.Secret)
+
 	// Update sink
 	sinkUpdateReq := AddSubscriptionSinkRequest{
 		SinkFormat: substoreserver.SinkFormatYAML,
@@ -125,8 +129,28 @@ func TestAddSinkAndExecute(t *testing.T) {
 	s.handleUpdateSink(upW, upReq)
 	assert.Equal(t, http.StatusOK, upW.Code)
 
-	// Execute sink
+	var upResp SinkResponse
+	json.Unmarshal(upW.Body.Bytes(), &upResp)
+	assert.Equal(t, sinkResp.Secret, upResp.Secret, "Secret should be preserved on update")
+
+	// Execute sink without secret - should fail
+	execReqNoSecret := httptest.NewRequest("GET", "/mysink", nil)
+	execReqNoSecret.SetPathValue("name", "mysink")
+	wExecNoSecret := httptest.NewRecorder()
+	s.handleExecuteSink(wExecNoSecret, execReqNoSecret)
+	assert.Equal(t, http.StatusUnauthorized, wExecNoSecret.Code)
+
+	// Execute sink with invalid secret - should fail
+	execReqInvalidSecret := httptest.NewRequest("GET", "/mysink", nil)
+	execReqInvalidSecret.SetBasicAuth("substore", "invalid")
+	execReqInvalidSecret.SetPathValue("name", "mysink")
+	wExecInvalidSecret := httptest.NewRecorder()
+	s.handleExecuteSink(wExecInvalidSecret, execReqInvalidSecret)
+	assert.Equal(t, http.StatusUnauthorized, wExecInvalidSecret.Code)
+
+	// Execute sink with correct secret
 	execReq := httptest.NewRequest("GET", "/mysink", nil)
+	execReq.SetBasicAuth("substore", sinkResp.Secret)
 	execReq.SetPathValue("name", "mysink")
 	wExec := httptest.NewRecorder()
 	s.handleExecuteSink(wExec, execReq)
@@ -242,4 +266,3 @@ func TestJSONToFennel(t *testing.T) {
 	assert.Contains(t, resp.Fennel, `:foo "bar"`)
 	assert.Contains(t, resp.Fennel, `:list [1 2 3]`)
 }
-

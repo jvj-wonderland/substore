@@ -8,8 +8,21 @@
 - **Data Pipeline**: Powered by **Fennel** (compiled to Lua) running on **Gopher-Lua**.
 - **Storage**: Persistent storage using **bbolt** with **gob** encoding.
 - **Networking**:
-  - **Port 8080**: Management API (`/api/*`) and Static SPA serving (production).
-  - **Port 8001**: Execution API (dedicated port for script execution).
+  - **Port 8080**: Management API (`/api/*`) and Static SPA serving (production). Configurable via `SUBSTORE_MANAGEMENT_PORT`.
+  - **Port 8001**: Execution API (dedicated port for script execution). Configurable via `SUBSTORE_EXECUTION_PORT`.
+
+## Deployment & Configuration
+
+- **Environment Variables**:
+  - `SUBSTORE_DB_PATH`: Path to the bbolt database file (default: `~/.local/share/substore/substore.db`).
+  - `SUBSTORE_MANAGEMENT_PORT`: Port for the management API and SPA (default: `8080`).
+  - `SUBSTORE_EXECUTION_PORT`: Port for the execution API (default: `8001`).
+  - `SUBSTORE_API_TARGET`: (Development) Target for Vite proxying (default: `http://localhost:8080`).
+- **Security**:
+  - Every `SubscriptionSink` MUST have a `Secret`.
+  - Sink execution via the Execution API requires **HTTP Basic Authentication**:
+    - **Username**: `substore`
+    - **Password**: The sink's `Secret`
 
 ## Backend (Go) Conventions
 

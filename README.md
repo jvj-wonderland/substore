@@ -1,15 +1,61 @@
-# substore
+# SubStore
 
-To install dependencies:
+SubStore is a powerful, self-hosted subscription management and transformation server. It allows you to aggregate multiple subscription sources, transform them using Fennel-based data pipelines, and serve them via secured sinks.
+
+## Core Features
+
+- **Multi-Source Support**: Local and remote subscription sources.
+- **Fennel Pipelines**: Transform, filter, and merge data using a Lisp-like language that compiles to Lua.
+- **Persistent Storage**: Robust data management using `bbolt` and `gob`.
+- **Secured Sinks**: Access your transformed subscriptions via HTTP Basic Auth.
+- **Modern UI**: A React-based web interface for managing sources and sinks.
+
+## Quick Start
+
+### Installation
 
 ```bash
 bun install
 ```
 
-To run:
+### Development
+
+Start the backend and frontend in parallel:
 
 ```bash
-bun run index.ts
+just dev
 ```
 
-This project was created using `bun init` in bun v1.3.10. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+### Production Build
+
+Build the single production binary with the embedded UI:
+
+```bash
+just build
+```
+
+The resulting binary will be located in `apps/substore-server/cmd/substore-server/substore-server`.
+
+## Configuration
+
+SubStore can be configured using the following environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SUBSTORE_DB_PATH` | Path to the `bbolt` database file. | `~/.local/share/substore/substore.db` |
+| `SUBSTORE_MANAGEMENT_PORT` | Port for the management API and web interface. | `8080` |
+| `SUBSTORE_EXECUTION_PORT` | Dedicated port for executing subscription sinks. | `8001` |
+| `SUBSTORE_API_TARGET` | (Dev only) Target for Vite's API proxying. | `http://localhost:8080` |
+| `VITE_API_URL` | (Webapp) Base URL for the management API. | `/api` |
+| `VITE_EXECUTION_API_URL`| (Webapp) Base URL for the execution API. | `window.location.protocol + "//" + window.location.hostname + ":8001"` |
+
+## Security
+
+Execution of sinks requires **HTTP Basic Authentication**.
+
+- **Username**: `substore`
+- **Password**: The unique **Secret Key** generated for each sink.
+
+## License
+
+MIT

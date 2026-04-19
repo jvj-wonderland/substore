@@ -2,13 +2,17 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"embed"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -38,8 +42,33 @@ func NewServer(dbPath string) (*Server, error) {
 	}, nil
 }
 
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
+func getDBPath() string {
+	path := os.Getenv("SUBSTORE_DB_PATH")
+	if path != "" {
+		return path
+	}
+	// Fallback for Linux
+	home, err := os.UserHomeDir()
+	if err == nil {
+		// Use ~/.local/share/substore/substore.db as a safe default on Linux
+		defaultDir := filepath.Join(home, ".local", "share", "substore")
+		_ = os.MkdirAll(defaultDir, 0755)
+		return filepath.Join(defaultDir, "substore.db")
+	}
+	return "substore.db"
+}
+
 func main() {
-	s, err := NewServer("substore.db")
+	dbPath := getDBPath()
+	log.Printf("Using database at %s", dbPath)
+	s, err := NewServer(dbPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -54,11 +83,13 @@ func main() {
 	apiMux.HandleFunc("GET /sources/{id}", s.handleGetSource)
 	apiMux.HandleFunc("PUT /sources/{id}", s.handleUpdateSource)
 	apiMux.HandleFunc("PATCH /sources/{id}", s.handleUpdateSource)
+	apiMux.HandleFunc("DELETE /sources/{id}", s.handleDeleteSource)
 
 	apiMux.HandleFunc("POST /sinks", s.handleAddSink)
 	apiMux.HandleFunc("GET /sinks", s.handleGetSinks)
 	apiMux.HandleFunc("PUT /sinks/{name}", s.handleUpdateSink)
 	apiMux.HandleFunc("PATCH /sinks/{name}", s.handleUpdateSink)
+	apiMux.HandleFunc("DELETE /sinks/{name}", s.handleDeleteSink)
 
 	apiMux.HandleFunc("POST /eval", s.handleEval)
 	apiMux.HandleFunc("GET /tasks", s.handleGetTasks)
@@ -106,15 +137,18 @@ func main() {
 	execMux := http.NewServeMux()
 	execMux.HandleFunc("GET /{name}", s.handleExecuteSink)
 
+	managementPort := getEnv("SUBSTORE_MANAGEMENT_PORT", "8080")
+	executionPort := getEnv("SUBSTORE_EXECUTION_PORT", "8001")
+
 	go func() {
-		log.Println("Management API and SPA starting on :8080")
-		if err := http.ListenAndServe(":8080", managementMux); err != nil {
+		log.Printf("Management API and SPA starting on :%s", managementPort)
+		if err := http.ListenAndServe(":"+managementPort, managementMux); err != nil {
 			log.Fatalf("Management API failed: %v", err)
 		}
 	}()
 
-	log.Println("Execution API starting on :8001")
-	if err := http.ListenAndServe(":8001", execMux); err != nil {
+	log.Printf("Execution API starting on :%s", executionPort)
+	if err := http.ListenAndServe(":"+executionPort, execMux); err != nil {
 		log.Fatalf("Execution API failed: %v", err)
 	}
 }
@@ -293,6 +327,32 @@ func (s *Server) handleJSONToFennel(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(JSONToFennelResponse{Fennel: fennelStr})
 }
 
+func generateSecret() string {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return uuid.New().String()
+	}
+	return hex.EncodeToString(b)
+}
+
+func (s *Server) handleDeleteSource(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if err := s.storage.DeleteSource(id); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) handleDeleteSink(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	if err := s.storage.DeleteSink(name); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (s *Server) handleAddSink(w http.ResponseWriter, r *http.Request) {
 	var req AddSubscriptionSinkRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -300,8 +360,14 @@ func (s *Server) handleAddSink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	secret := req.Secret
+	if secret == "" {
+		secret = generateSecret()
+	}
+
 	sink := &substoreserver.SubscriptionSink{
-		Name: req.Name,
+		Name:   req.Name,
+		Secret: secret,
 	}
 
 	if err := s.applySinkPayload(sink, &req); err != nil {
@@ -330,6 +396,12 @@ func (s *Server) handleUpdateSink(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	if req.Secret != "" {
+		sink.Secret = req.Secret
+	} else if sink.Secret == "" {
+		sink.Secret = generateSecret()
 	}
 
 	if err := s.applySinkPayload(sink, &req); err != nil {
@@ -386,6 +458,14 @@ func (s *Server) handleExecuteSink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Verify secret via Basic Auth
+	_, pass, ok := r.BasicAuth()
+	if !ok || pass != sink.Secret {
+		w.Header().Set("WWW-Authenticate", `Basic realm="SubStore Sink"`)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	sources, err := s.storage.GetAllSources()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -394,7 +474,9 @@ func (s *Server) handleExecuteSink(w http.ResponseWriter, r *http.Request) {
 
 	result, err := s.executePipeline(sink, sources)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Pipeline Execution Error: %v", err)
 		return
 	}
 
@@ -655,6 +737,7 @@ func (s *Server) toSourceResponse(source *storage.Source) SourceResponse {
 func (s *Server) toSinkResponse(sink *substoreserver.SubscriptionSink) SinkResponse {
 	return SinkResponse{
 		Name:           sink.Name,
+		Secret:         sink.Secret,
 		SinkFormat:     sink.SinkFormat,
 		PipelineScript: sink.PipelineScript,
 	}
@@ -681,6 +764,7 @@ type AddSubscriptionSourceRequest struct {
 
 type AddSubscriptionSinkRequest struct {
 	Name           string                    `json:"name"`
+	Secret         string                    `json:"secret"`
 	SinkFormat     substoreserver.SinkFormat `json:"sink_format"`
 	PipelineScript string                    `json:"pipeline_script"`
 }
@@ -699,6 +783,7 @@ type SourceResponse struct {
 
 type SinkResponse struct {
 	Name           string                    `json:"name"`
+	Secret         string                    `json:"secret"`
 	SinkFormat     substoreserver.SinkFormat `json:"sink_format"`
 	PipelineScript string                    `json:"pipeline_script"`
 }

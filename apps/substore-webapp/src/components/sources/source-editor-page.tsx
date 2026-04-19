@@ -7,6 +7,7 @@ import {
   RiRefreshLine,
   RiSaveLine,
   RiUploadCloud2Line,
+  RiDeleteBinLine,
 } from "@remixicon/react"
 import * as API from "@/api/client"
 import { CodeBlock } from "@/components/code-block"
@@ -25,6 +26,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { cn } from "@/lib/utils"
@@ -48,6 +60,7 @@ interface SourceEditorPageProps {
   initialValues: SourceEditorInitialValues
   isSubmitting: boolean
   onSubmit: (payload: typeof API.AddSourcePayload.Type) => void
+  onDelete?: () => void
 }
 
 type EditorState = {
@@ -90,6 +103,7 @@ export function SourceEditorPage({
   initialValues,
   isSubmitting,
   onSubmit,
+  onDelete,
 }: SourceEditorPageProps) {
   const isDesktop = useMediaQuery("(min-width: 768px)")
 
@@ -186,6 +200,7 @@ export function SourceEditorPage({
         submitLabel={submitLabel}
         submitPendingLabel={submitPendingLabel}
         isSubmitting={isSubmitting}
+        onDelete={onDelete}
       />
 
       <div className="min-h-0 flex-1">
@@ -303,12 +318,14 @@ function EditorHeader({
   submitLabel,
   submitPendingLabel,
   isSubmitting,
+  onDelete,
 }: {
   title: string
   subtitle: string
   submitLabel: string
   submitPendingLabel: string
   isSubmitting: boolean
+  onDelete?: () => void
 }) {
   return (
     <div className="bg-background/95 border-b px-4 py-3 backdrop-blur sm:px-8 sm:py-4">
@@ -331,16 +348,48 @@ function EditorHeader({
           </div>
         </div>
 
-        <Button type="submit" size="sm" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <RiRefreshLine className="mr-1 h-3 w-3 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
-          ) : (
-            <RiSaveLine className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+        <div className="flex gap-2">
+          {onDelete && (
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
+                  <Button variant="destructive" size="sm">
+                    <RiDeleteBinLine className="h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Delete</span>
+                  </Button>
+                }
+              />
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete this source. This action cannot
+                    be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={onDelete}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
-          <span className="text-[10px] sm:text-xs">
-            {isSubmitting ? submitPendingLabel : submitLabel}
-          </span>
-        </Button>
+          <Button type="submit" size="sm" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <RiRefreshLine className="mr-1 h-3 w-3 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
+            ) : (
+              <RiSaveLine className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+            )}
+            <span className="text-[10px] sm:text-xs">
+              {isSubmitting ? submitPendingLabel : submitLabel}
+            </span>
+          </Button>
+        </div>
       </div>
     </div>
   )

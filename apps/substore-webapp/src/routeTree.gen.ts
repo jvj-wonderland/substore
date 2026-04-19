@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as SinksRouteImport } from './routes/sinks'
-import { Route as EvalRouteImport } from './routes/eval'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SourcesIndexRouteImport } from './routes/sources.index'
 import { Route as SinksIndexRouteImport } from './routes/sinks.index'
@@ -29,11 +28,6 @@ const SourcesRoute = SourcesRouteImport.update({
 const SinksRoute = SinksRouteImport.update({
   id: '/sinks',
   path: '/sinks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvalRoute = EvalRouteImport.update({
-  id: '/eval',
-  path: '/eval',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -79,7 +73,6 @@ const SinksSinkIdEditRoute = SinksSinkIdEditRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/eval': typeof EvalRoute
   '/sinks': typeof SinksRouteWithChildren
   '/sources': typeof SourcesRouteWithChildren
   '/sinks/new': typeof SinksNewRoute
@@ -92,7 +85,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/eval': typeof EvalRoute
   '/sinks/new': typeof SinksNewRoute
   '/sources/new': typeof SourcesNewRoute
   '/sinks': typeof SinksIndexRoute
@@ -104,7 +96,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/eval': typeof EvalRoute
   '/sinks': typeof SinksRouteWithChildren
   '/sources': typeof SourcesRouteWithChildren
   '/sinks/new': typeof SinksNewRoute
@@ -119,7 +110,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/eval'
     | '/sinks'
     | '/sources'
     | '/sinks/new'
@@ -132,7 +122,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/eval'
     | '/sinks/new'
     | '/sources/new'
     | '/sinks'
@@ -143,7 +132,6 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/eval'
     | '/sinks'
     | '/sources'
     | '/sinks/new'
@@ -157,7 +145,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  EvalRoute: typeof EvalRoute
   SinksRoute: typeof SinksRouteWithChildren
   SourcesRoute: typeof SourcesRouteWithChildren
 }
@@ -176,13 +163,6 @@ declare module '@tanstack/react-router' {
       path: '/sinks'
       fullPath: '/sinks'
       preLoaderRoute: typeof SinksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/eval': {
-      id: '/eval'
-      path: '/eval'
-      fullPath: '/eval'
-      preLoaderRoute: typeof EvalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -277,7 +257,6 @@ const SourcesRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  EvalRoute: EvalRoute,
   SinksRoute: SinksRouteWithChildren,
   SourcesRoute: SourcesRouteWithChildren,
 }

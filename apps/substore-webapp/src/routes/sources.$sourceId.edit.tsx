@@ -39,6 +39,17 @@ function EditSourcePage() {
     },
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: () =>
+      Effect.runPromise(
+        API.deleteSource(sourceId).pipe(Effect.provide(API.clientLayer))
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sources"] })
+      navigate({ to: "/sources" })
+    },
+  })
+
   return match(sourceQuery)
     .with({ status: "pending" }, () => <div className="p-8">Loading...</div>)
     .with({ status: "error" }, () => (
@@ -66,6 +77,7 @@ function EditSourcePage() {
           initialValues={initialValues}
           isSubmitting={updateMutation.isPending}
           onSubmit={(payload) => updateMutation.mutate(payload)}
+          onDelete={() => deleteMutation.mutate()}
         />
       )
     })

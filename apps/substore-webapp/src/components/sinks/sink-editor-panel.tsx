@@ -13,10 +13,15 @@ import {
 } from "@/components/ui/select"
 import * as API from "@/api/client"
 
+import { RiRefreshLine } from "@remixicon/react"
+import { Button } from "@/components/ui/button"
+
 interface SinkEditorPanelProps {
   name?: string
   setName?: (name: string) => void
   nameDisabled?: boolean
+  secret: string
+  setSecret: (secret: string) => void
   format: API.SinkFormat
   setFormat: (format: API.SinkFormat) => void
   script: string
@@ -27,6 +32,8 @@ export function SinkEditorPanel({
   name,
   setName,
   nameDisabled,
+  secret,
+  setSecret,
   format,
   setFormat,
   script,
@@ -37,6 +44,11 @@ export function SinkEditorPanel({
     theme === "dark" ||
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches)
+
+  const handleRegenerateSecret = () => {
+    const newSecret = crypto.randomUUID().replace(/-/g, "")
+    setSecret(newSecret)
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-zinc-950/5">
@@ -86,6 +98,37 @@ export function SinkEditorPanel({
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        <div className="grid gap-2">
+          <Label
+            htmlFor="secret"
+            className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase sm:text-xs"
+          >
+            Secret Key (Basic Auth)
+          </Label>
+          <div className="flex gap-2">
+            <Input
+              id="secret"
+              value={secret}
+              readOnly
+              placeholder="Click regenerate to create a secret"
+              className="bg-background h-8 flex-1 font-mono text-[10px] shadow-none focus-visible:ring-1 sm:h-9 sm:text-xs"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2 sm:h-9"
+              onClick={handleRegenerateSecret}
+            >
+              <RiRefreshLine className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-[10px] sm:text-xs">Regenerate</span>
+            </Button>
+          </div>
+          <p className="text-muted-foreground text-[8px] sm:text-[10px]">
+            This secret is used for HTTP Basic Auth to protect your sink
+            execution.
+          </p>
         </div>
       </div>
 

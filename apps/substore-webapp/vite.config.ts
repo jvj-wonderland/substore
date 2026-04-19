@@ -9,13 +9,13 @@ import reactScan from "@react-scan/vite-plugin-react-scan"
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
-    babel({
-      presets: [reactCompilerPreset({ target: "19" })],
-    }),
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
+    }),
+    react(),
+    babel({
+      presets: [reactCompilerPreset({ target: "19" })],
     }),
     reactScan({
       enable: true,
@@ -25,7 +25,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        target: process.env.SUBSTORE_API_TARGET || "http://localhost:8080",
         changeOrigin: true,
       },
     },

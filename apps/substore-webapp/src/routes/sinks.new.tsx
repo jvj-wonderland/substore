@@ -24,6 +24,9 @@ function AddSinkPage() {
   const isDesktop = useMediaQuery("(min-width: 768px)")
 
   const [name, setName] = useState("")
+  const [secret, setSecret] = useState(() =>
+    crypto.randomUUID().replace(/-/g, "")
+  )
   const [format, setFormat] = useState<API.SinkFormat>("json")
   const [script, setScript] = useState("*sources*")
   const [evalResult, setEvalResult] = useState<
@@ -71,6 +74,7 @@ function AddSinkPage() {
     }
     addMutation.mutate({
       name,
+      secret,
       sink_format: format,
       pipeline_script: script,
     })
@@ -122,6 +126,8 @@ function AddSinkPage() {
             <SinkEditorPanel
               name={name}
               setName={setName}
+              secret={secret}
+              setSecret={setSecret}
               format={format}
               setFormat={setFormat}
               script={script}

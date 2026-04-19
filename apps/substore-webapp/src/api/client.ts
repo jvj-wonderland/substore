@@ -9,7 +9,7 @@ import * as Schemas from "./schemas"
 
 export * from "./schemas"
 
-const API_BASE = "/api"
+const API_BASE = import.meta.env.VITE_API_URL || "/api"
 
 const baseClient = Effect.gen(function* () {
   const client = yield* HttpClient.HttpClient
@@ -87,6 +87,18 @@ export const updateSink = (
     )
     return yield* HttpClientResponse.schemaBodyJson(Schemas.Sink)(response)
   })
+
+export const deleteSink = (name: string) =>
+  baseClient.pipe(
+    Effect.flatMap((client) => client.execute(HttpClientRequest.del(`/sinks/${name}`))),
+    Effect.asVoid
+  )
+
+export const deleteSource = (id: string) =>
+  baseClient.pipe(
+    Effect.flatMap((client) => client.execute(HttpClientRequest.del(`/sources/${id}`))),
+    Effect.asVoid
+  )
 
 export const evalScript = (payload: typeof Schemas.EvalRequest.Type) =>
   Effect.gen(function* () {
