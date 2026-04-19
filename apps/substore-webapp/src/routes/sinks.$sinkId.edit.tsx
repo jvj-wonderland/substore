@@ -3,34 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Effect } from "effect"
 import * as API from "@/api/client"
 import { Button } from "@/components/ui/button"
-import {
-  RiArrowLeftLine,
-  RiPlayLine,
-  RiSaveLine,
-  RiRefreshLine,
-  RiDeleteBinLine,
-} from "@remixicon/react"
 import { useState } from "react"
 import { formatError } from "@/lib/effect-utils"
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { useMediaQuery } from "@/hooks/use-media-query"
-import { SinkEditorPanel } from "@/components/sinks/sink-editor-panel"
-import { SinkPreviewPanel } from "@/components/sinks/sink-preview-panel"
+import { SinkEditorPage } from "@/components/sinks/sink-editor-page"
 import { match } from "ts-pattern"
 
 export const Route = createFileRoute("/sinks/$sinkId/edit")({
@@ -41,7 +16,6 @@ function EditSinkPage() {
   const { sinkId } = Route.useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const isDesktop = useMediaQuery("(min-width: 768px)")
 
   const [format, setFormat] = useState<API.SinkFormat>("json")
   const [secret, setSecret] = useState("")
@@ -161,110 +135,28 @@ function EditSinkPage() {
         )
 
       return (
-        <div className="bg-background flex h-full flex-col overflow-hidden">
-          <div className="bg-background/95 z-10 flex shrink-0 items-center justify-between border-b px-4 py-3 backdrop-blur sm:px-8 sm:py-4">
-            <div className="flex items-center gap-2 sm:gap-4">
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                render={<Link to="/sinks" />}
-              >
-                <RiArrowLeftLine className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
-              <div>
-                <h2 className="text-sm font-bold tracking-tight sm:text-xl">
-                  Edit Sink
-                </h2>
-                <p className="text-primary text-[8px] font-bold tracking-widest uppercase sm:text-[10px]">
-                  Editing: {sinkId}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <AlertDialog>
-                <AlertDialogTrigger
-                  render={
-                    <Button variant="destructive" size="sm">
-                      <RiDeleteBinLine className="h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
-                      <span className="hidden sm:inline">Delete</span>
-                    </Button>
-                  }
-                />
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Are you absolutely sure?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently delete the sink "{sinkId}". This
-                      action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => deleteMutation.mutate()}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRun}
-                disabled={evalMutation.isPending}
-              >
-                {evalMutation.isPending ? (
-                  <RiRefreshLine className="mr-1 h-3 w-3 animate-spin sm:mr-2 sm:h-4 sm:w-4" />
-                ) : (
-                  <RiPlayLine className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
-                )}
-                <span className="text-[10px] sm:text-xs">Run</span>
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={updateMutation.isPending}
-              >
-                <RiSaveLine className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
-                <span className="text-[10px] sm:text-xs">Save</span>
-              </Button>
-            </div>
-          </div>
-
-          <div className="min-h-0 flex-1">
-            <ResizablePanelGroup
-              orientation={isDesktop ? "horizontal" : "vertical"}
-              className="h-full"
-            >
-              <ResizablePanel defaultSize={50} minSize={20}>
-                <SinkEditorPanel
-                  name={sinkId}
-                  nameDisabled
-                  secret={secret}
-                  setSecret={setSecret}
-                  format={format}
-                  setFormat={setFormat}
-                  script={script}
-                  setScript={setScript}
-                />
-              </ResizablePanel>
-
-              <ResizableHandle withHandle />
-
-              <ResizablePanel defaultSize={50} minSize={20}>
-                <SinkPreviewPanel
-                  evalResult={evalResult}
-                  isPending={evalMutation.isPending}
-                  format={format}
-                />
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          </div>
-        </div>
+        <SinkEditorPage
+          title="Edit Sink"
+          subtitle={
+            <p className="text-primary text-[8px] font-bold tracking-widest uppercase sm:text-[10px]">
+              Editing: {sinkId}
+            </p>
+          }
+          name={sinkId}
+          nameDisabled
+          secret={secret}
+          setSecret={setSecret}
+          format={format}
+          setFormat={setFormat}
+          script={script}
+          setScript={setScript}
+          evalResult={evalResult}
+          isEvalPending={evalMutation.isPending}
+          isSavePending={updateMutation.isPending}
+          onRun={handleRun}
+          onSave={handleSave}
+          onDelete={() => deleteMutation.mutate()}
+        />
       )
     })
     .exhaustive()

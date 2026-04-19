@@ -1,18 +1,9 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Effect } from "effect"
 import * as API from "@/api/client"
-import { Button } from "@/components/ui/button"
-import { RiArrowLeftLine, RiPlayLine, RiSaveLine } from "@remixicon/react"
 import { useState } from "react"
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable"
-import { useMediaQuery } from "@/hooks/use-media-query"
-import { SinkEditorPanel } from "@/components/sinks/sink-editor-panel"
-import { SinkPreviewPanel } from "@/components/sinks/sink-preview-panel"
+import { SinkEditorPage } from "@/components/sinks/sink-editor-page"
 
 export const Route = createFileRoute("/sinks/new")({
   component: AddSinkPage,
@@ -21,7 +12,6 @@ export const Route = createFileRoute("/sinks/new")({
 function AddSinkPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const isDesktop = useMediaQuery("(min-width: 768px)")
 
   const [name, setName] = useState("")
   const [secret, setSecret] = useState(() =>
@@ -81,71 +71,26 @@ function AddSinkPage() {
   }
 
   return (
-    <div className="bg-background flex h-full flex-col overflow-hidden">
-      <div className="bg-background/95 z-10 flex shrink-0 items-center justify-between border-b px-4 py-3 backdrop-blur sm:px-8 sm:py-4">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <Button variant="ghost" size="icon-sm" render={<Link to="/sinks" />}>
-            <RiArrowLeftLine className="h-4 w-4 sm:h-5 sm:w-5" />
-          </Button>
-          <div>
-            <h2 className="text-sm font-bold tracking-tight sm:text-xl">
-              New Sink
-            </h2>
-            <p className="text-muted-foreground text-[8px] font-semibold tracking-widest uppercase sm:text-[10px]">
-              Creation Mode
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRun}
-            disabled={evalMutation.isPending}
-          >
-            <RiPlayLine className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
-            <span className="text-[10px] sm:text-xs">Run</span>
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={addMutation.isPending}
-          >
-            <RiSaveLine className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
-            <span className="text-[10px] sm:text-xs">Save</span>
-          </Button>
-        </div>
-      </div>
-
-      <div className="min-h-0 flex-1">
-        <ResizablePanelGroup
-          orientation={isDesktop ? "horizontal" : "vertical"}
-          className="h-full"
-        >
-          <ResizablePanel defaultSize={50} minSize={20}>
-            <SinkEditorPanel
-              name={name}
-              setName={setName}
-              secret={secret}
-              setSecret={setSecret}
-              format={format}
-              setFormat={setFormat}
-              script={script}
-              setScript={setScript}
-            />
-          </ResizablePanel>
-
-          <ResizableHandle withHandle />
-
-          <ResizablePanel defaultSize={50} minSize={20}>
-            <SinkPreviewPanel
-              evalResult={evalResult}
-              isPending={evalMutation.isPending}
-              format={format}
-            />
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
-    </div>
+    <SinkEditorPage
+      title="New Sink"
+      subtitle={
+        <p className="text-muted-foreground text-[8px] font-semibold tracking-widest uppercase sm:text-[10px]">
+          Creation Mode
+        </p>
+      }
+      name={name}
+      setName={setName}
+      secret={secret}
+      setSecret={setSecret}
+      format={format}
+      setFormat={setFormat}
+      script={script}
+      setScript={setScript}
+      evalResult={evalResult}
+      isEvalPending={evalMutation.isPending}
+      isSavePending={addMutation.isPending}
+      onRun={handleRun}
+      onSave={handleSave}
+    />
   )
 }
