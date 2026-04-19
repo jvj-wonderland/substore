@@ -1,11 +1,20 @@
 import { useEffect, useState, useMemo } from "react"
-import { createHighlighter, type Highlighter } from "shiki"
+import { createHighlighterCore, type HighlighterGeneric } from "@shikijs/core"
+import { createOnigurumaEngine } from "@shikijs/engine-oniguruma"
+import bash from "@shikijs/langs/bash"
+import fennel from "@shikijs/langs/fennel"
+import json from "@shikijs/langs/json"
+import lua from "@shikijs/langs/lua"
+import yaml from "@shikijs/langs/yaml"
+import getWasmInstance from "@shikijs/engine-oniguruma/wasm-inlined"
+import githubDark from "@shikijs/themes/github-dark"
+import githubLight from "@shikijs/themes/github-light"
 import { useTheme } from "./theme-provider"
 import { useMediaQuery } from "../hooks/use-media-query"
 
 interface CodeBlockProps {
   code: string
-  lang: "json" | "yaml" | "fennel" | "lua"
+  lang: "json" | "yaml" | "fennel" | "lua" | "bash"
   className?: string
 }
 
@@ -22,15 +31,17 @@ function makeShikiBackgroundTransparent(html: string) {
     .replace(/<code([^>]*?)style=""/g, "<code$1")
 }
 
-let highlighterPromise: Promise<Highlighter> | null = null
+let highlighterPromise: Promise<HighlighterGeneric<string, string>> | null = null
 
-function getHighlighter() {
-  if (!highlighterPromise) {
-    highlighterPromise = createHighlighter({
-      themes: ["github-dark", "github-light"],
-      langs: ["json", "yaml", "fennel", "lua"],
-    })
-  }
+function getHighlighter(): Promise<HighlighterGeneric<string, string>> {
+  if (highlighterPromise) return highlighterPromise
+
+  highlighterPromise = createHighlighterCore({
+    themes: [githubDark, githubLight],
+    langs: [json, yaml, fennel, lua, bash],
+    engine: createOnigurumaEngine(getWasmInstance),
+  }) as Promise<HighlighterGeneric<string, string>>
+
   return highlighterPromise
 }
 
@@ -72,7 +83,7 @@ export function CodeBlock({ code, lang, className }: CodeBlockProps) {
     }
   }, [code, lang, resolvedTheme, currentParams])
 
-  if (!isCurrent) {
+  if (!isCurrent || !rendered) {
     return (
       <div className="bg-muted/50 flex h-full w-full animate-pulse items-center justify-center rounded-md">
         <span className="text-muted-foreground text-xs">Highlighting...</span>
