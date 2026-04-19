@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { createHighlighter, type Highlighter } from "shiki"
 import { useTheme } from "./theme-provider"
+import { useMediaQuery } from "../hooks/use-media-query"
 
 interface CodeBlockProps {
   code: string
@@ -34,39 +35,24 @@ function getHighlighter() {
 }
 
 export function CodeBlock({ code, lang, className }: CodeBlockProps) {
-  const [html, setHtml] = useState<string>("")
-  const [loading, setLoading] = useState(true)
   const { theme } = useTheme()
-  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">(() =>
-    theme === "system"
-      ? window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light"
-      : theme
-  )
+  const isSystemDark = useMediaQuery("(prefers-color-scheme: dark)")
 
-  useEffect(() => {
-    if (theme !== "system") {
-      setResolvedTheme(theme)
-      return
-    }
+  const resolvedTheme = useMemo(() => {
+    if (theme !== "system") return theme
+    return isSystemDark ? "dark" : "light"
+  }, [theme, isSystemDark])
 
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
-    const updateResolvedTheme = () => {
-      setResolvedTheme(mediaQuery.matches ? "dark" : "light")
-    }
+  const [rendered, setRendered] = useState<{
+    html: string
+    params: string
+  } | null>(null)
 
-    updateResolvedTheme()
-    mediaQuery.addEventListener("change", updateResolvedTheme)
-
-    return () => {
-      mediaQuery.removeEventListener("change", updateResolvedTheme)
-    }
-  }, [theme])
+  const currentParams = `${code}-${lang}-${resolvedTheme}`
+  const isCurrent = rendered?.params === currentParams
 
   useEffect(() => {
     let isMounted = true
-    setLoading(true)
 
     getHighlighter().then((highlighter) => {
       if (!isMounted) return
@@ -75,16 +61,18 @@ export function CodeBlock({ code, lang, className }: CodeBlockProps) {
         lang,
         theme: resolvedTheme === "dark" ? "github-dark" : "github-light",
       })
-      setHtml(makeShikiBackgroundTransparent(highlighted))
-      setLoading(false)
+      setRendered({
+        html: makeShikiBackgroundTransparent(highlighted),
+        params: currentParams,
+      })
     })
 
     return () => {
       isMounted = false
     }
-  }, [code, lang, resolvedTheme])
+  }, [code, lang, resolvedTheme, currentParams])
 
-  if (loading) {
+  if (!isCurrent) {
     return (
       <div className="bg-muted/50 flex h-full w-full animate-pulse items-center justify-center rounded-md">
         <span className="text-muted-foreground text-xs">Highlighting...</span>
@@ -95,7 +83,7 @@ export function CodeBlock({ code, lang, className }: CodeBlockProps) {
   return (
     <div
       className={className}
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: rendered.html }}
       style={{
         fontSize: "13px",
         lineHeight: "1.5",

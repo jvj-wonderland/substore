@@ -101,6 +101,7 @@ export function SinkEditorPanel({
               value={script}
               height="100%"
               theme={isDark ? githubDark : githubLight}
+              // @ts-expect-error - language_support is unknown but expected as Extension
               extensions={[language_support]}
               onChange={(val) => setScript(val)}
               className="h-full text-[10px] sm:text-xs"

@@ -36,14 +36,14 @@ function AddSinkPage() {
         API.evalScript(payload).pipe(Effect.provide(API.clientLayer))
       ),
     onSuccess: (data) => setEvalResult(data),
-    onError: (error: any) => {
+    onError: (error) => {
       setEvalResult({
         result: null,
         result_string: "",
         compiled_script: "",
         stdout: "",
         stderr: "",
-        error: error.message || "Execution failed",
+        error: error instanceof Error ? error.message : "Execution failed",
       })
     },
   })
@@ -63,7 +63,7 @@ function AddSinkPage() {
     evalMutation.mutate({ script, sink_format: format })
   }
 
-  const handleSave = (e: React.SubmitEvent) => {
+  const handleSave = (e: React.MouseEvent | React.SubmitEvent) => {
     e.preventDefault()
     if (!/^[a-z0-9-]+$/.test(name)) {
       alert("Name must be a valid slug (lowercase, numbers, and hyphens only)")
@@ -104,7 +104,7 @@ function AddSinkPage() {
           </Button>
           <Button
             size="sm"
-            onClick={(e) => handleSave(e as any)}
+            onClick={handleSave}
             disabled={addMutation.isPending}
           >
             <RiSaveLine className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />

@@ -9,7 +9,7 @@ import {
   RiSaveLine,
   RiRefreshLine,
 } from "@remixicon/react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { formatError } from "@/lib/effect-utils"
 import {
   ResizableHandle,
@@ -51,12 +51,13 @@ function EditSinkPage() {
       ),
   })
 
-  useEffect(() => {
-    if (sink) {
-      setFormat(sink.sink_format)
-      setScript(sink.pipeline_script)
-    }
-  }, [sink])
+  // Adjust state when sink data is loaded or changes
+  const [prevSink, setPrevSink] = useState<typeof API.Sink.Type | null>(null)
+  if (sink && sink !== prevSink) {
+    setPrevSink(sink)
+    setFormat(sink.sink_format)
+    setScript(sink.pipeline_script)
+  }
 
   const evalMutation = useMutation({
     mutationFn: (payload: typeof API.EvalRequest.Type) =>
@@ -64,14 +65,14 @@ function EditSinkPage() {
         API.evalScript(payload).pipe(Effect.provide(API.clientLayer))
       ),
     onSuccess: (data) => setEvalResult(data),
-    onError: (error: any) => {
+    onError: (error) => {
       setEvalResult({
         result: null,
         result_string: "",
         compiled_script: "",
         stdout: "",
         stderr: "",
-        error: error.message || "Execution failed",
+        error: error instanceof Error ? error.message : "Execution failed",
       })
     },
   })
@@ -91,7 +92,7 @@ function EditSinkPage() {
     evalMutation.mutate({ script, sink_format: format })
   }
 
-  const handleSave = (e: React.SubmitEvent) => {
+  const handleSave = (e: React.MouseEvent | React.SubmitEvent) => {
     e.preventDefault()
     updateMutation.mutate({
       name: sinkId,
@@ -155,7 +156,7 @@ function EditSinkPage() {
           </Button>
           <Button
             size="sm"
-            onClick={(e) => handleSave(e as any)}
+            onClick={handleSave}
             disabled={updateMutation.isPending}
           >
             <RiSaveLine className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
