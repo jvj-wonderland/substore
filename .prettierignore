@@ -1,0 +1,5 @@
+apps/substore-webapp/src/components/ui/
+apps/substore-webapp/src/routeTree.gen.ts
+node_modules/
+dist/
+.tanstack/

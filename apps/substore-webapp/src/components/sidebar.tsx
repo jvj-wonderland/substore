@@ -15,7 +15,9 @@ import {
 } from "@/components/ui/sidebar"
 
 export function AppSidebar() {
-  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  })
   const { isMobile, setOpenMobile } = useSidebar()
 
   const links = [
@@ -31,25 +33,25 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent className="p-4">
         <SidebarMenu>
-        {links.map((link) => (
-          <SidebarMenuItem key={link.to}>
-            <SidebarMenuButton
-              render={<Link to={link.to} />}
-              isActive={
-                pathname === link.to || pathname.startsWith(`${link.to}/`)
-              }
-              className="gap-3 rounded-md px-3 py-2 text-sm [&_svg]:size-5"
-              onClick={() => {
-                if (isMobile) {
-                  setOpenMobile(false)
+          {links.map((link) => (
+            <SidebarMenuItem key={link.to}>
+              <SidebarMenuButton
+                render={<Link to={link.to} />}
+                isActive={
+                  pathname === link.to || pathname.startsWith(`${link.to}/`)
                 }
-              }}
-            >
-              <link.icon className="shrink-0" />
-              <span>{link.label}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
+                className="gap-3 rounded-md px-3 py-2 text-sm [&_svg]:size-5"
+                onClick={() => {
+                  if (isMobile) {
+                    setOpenMobile(false)
+                  }
+                }}
+              >
+                <link.icon className="shrink-0" />
+                <span>{link.label}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
         </SidebarMenu>
       </SidebarContent>
     </UISidebar>

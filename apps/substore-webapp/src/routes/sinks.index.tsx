@@ -19,31 +19,26 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { formatError } from "@/lib/effect-utils"
+import { match } from "ts-pattern"
 
 export const Route = createFileRoute("/sinks/")({
   component: SinksIndexPage,
 })
 
 function SinksIndexPage() {
-  const {
-    data: sinks,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const query = useQuery({
     queryKey: ["sinks"],
     queryFn: () =>
       Effect.runPromise(API.getSinks.pipe(Effect.provide(API.clientLayer))),
   })
 
-  if (isLoading)
-    return (
+  return match(query)
+    .with({ status: "pending" }, () => (
       <div className="text-muted-foreground animate-pulse p-8 text-center">
         Loading sinks...
       </div>
-    )
-  if (error)
-    return (
+    ))
+    .with({ status: "error" }, ({ error }) => (
       <div className="text-destructive bg-destructive/5 border-destructive/20 m-8 rounded-lg border p-8">
         <h2 className="flex items-center gap-2 text-lg font-bold">
           Error loading sinks
@@ -52,49 +47,49 @@ function SinksIndexPage() {
           {formatError(error)}
         </pre>
       </div>
-    )
+    ))
+    .with({ status: "success" }, ({ data: sinks, refetch }) => (
+      <div className="space-y-6 p-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Sinks</h2>
+            <p className="text-muted-foreground text-sm">
+              Fennel scripts that unify sources into a final configuration.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" onClick={() => refetch()}>
+              <RiRefreshLine className="h-4 w-4" />
+            </Button>
+            <Button render={<Link to="/sinks/new" />}>
+              <RiAddLine className="mr-2 h-4 w-4" />
+              New Sink
+            </Button>
+          </div>
+        </div>
 
-  return (
-    <div className="space-y-6 p-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Sinks</h2>
-          <p className="text-muted-foreground text-sm">
-            Fennel scripts that unify sources into a final configuration.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={() => refetch()}>
-            <RiRefreshLine className="h-4 w-4" />
-          </Button>
-          <Button render={<Link to="/sinks/new" />}>
-            <RiAddLine className="mr-2 h-4 w-4" />
-            New Sink
-          </Button>
-        </div>
+        {sinks.length === 0 ? (
+          <div className="bg-muted/20 text-muted-foreground flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-12">
+            <p className="text-sm">No sinks created yet.</p>
+            <Button
+              variant="secondary"
+              size="sm"
+              render={<Link to="/sinks/new" />}
+            >
+              <RiAddLine className="mr-2 h-4 w-4" />
+              Create your first sink
+            </Button>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {sinks.map((sink) => (
+              <SinkCard key={sink.name} sink={sink} />
+            ))}
+          </div>
+        )}
       </div>
-
-      {sinks?.length === 0 ? (
-        <div className="bg-muted/20 text-muted-foreground flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-12">
-          <p className="text-sm">No sinks created yet.</p>
-          <Button
-            variant="secondary"
-            size="sm"
-            render={<Link to="/sinks/new" />}
-          >
-            <RiAddLine className="mr-2 h-4 w-4" />
-            Create your first sink
-          </Button>
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {sinks?.map((sink) => (
-            <SinkCard key={sink.name} sink={sink} />
-          ))}
-        </div>
-      )}
-    </div>
-  )
+    ))
+    .exhaustive()
 }
 
 function SinkCard({ sink }: { sink: API.Sink }) {

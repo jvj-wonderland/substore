@@ -6,6 +6,7 @@ import {
   SourceEditorPage,
   type SourceEditorInitialValues,
 } from "@/components/sources/source-editor-page"
+import { match } from "ts-pattern"
 
 export const Route = createFileRoute("/sources/$sourceId/edit")({
   component: EditSourcePage,
@@ -16,7 +17,7 @@ function EditSourcePage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { data: source, isLoading: isSourceLoading } = useQuery({
+  const sourceQuery = useQuery({
     queryKey: ["sources", sourceId],
     queryFn: () =>
       Effect.runPromise(
@@ -38,28 +39,35 @@ function EditSourcePage() {
     },
   })
 
-  if (isSourceLoading) return <div className="p-8">Loading...</div>
-  if (!source) return <div className="p-8">Source not found</div>
+  return match(sourceQuery)
+    .with({ status: "pending" }, () => <div className="p-8">Loading...</div>)
+    .with({ status: "error" }, () => (
+      <div className="p-8">Error loading source</div>
+    ))
+    .with({ status: "success" }, ({ data: source }) => {
+      if (!source) return <div className="p-8">Source not found</div>
 
-  const initialValues: SourceEditorInitialValues = {
-    type: source.type,
-    name: source.name,
-    tags: source.tags,
-    content: source.content,
-    url: source.url ?? "",
-    fetchMode: source.fetch_mode ?? "server",
-    updateInterval: source.update_interval ?? 3600,
-  }
+      const initialValues: SourceEditorInitialValues = {
+        type: source.type,
+        name: source.name,
+        tags: source.tags,
+        content: source.content,
+        url: source.url ?? "",
+        fetchMode: source.fetch_mode ?? "server",
+        updateInterval: source.update_interval ?? 3600,
+      }
 
-  return (
-    <SourceEditorPage
-      title="Edit Source"
-      subtitle={`Editing: ${source.name}`}
-      submitLabel="Save"
-      submitPendingLabel="Saving..."
-      initialValues={initialValues}
-      isSubmitting={updateMutation.isPending}
-      onSubmit={(payload) => updateMutation.mutate(payload)}
-    />
-  )
+      return (
+        <SourceEditorPage
+          title="Edit Source"
+          subtitle={`Editing: ${source.name}`}
+          submitLabel="Save"
+          submitPendingLabel="Saving..."
+          initialValues={initialValues}
+          isSubmitting={updateMutation.isPending}
+          onSubmit={(payload) => updateMutation.mutate(payload)}
+        />
+      )
+    })
+    .exhaustive()
 }

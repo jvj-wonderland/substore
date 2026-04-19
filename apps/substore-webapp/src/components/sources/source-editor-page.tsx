@@ -1,4 +1,4 @@
-import { useEffect, useState, useReducer, useCallback, useMemo } from "react"
+import { useEffect, useState, useReducer, useCallback } from "react"
 import { Link } from "@tanstack/react-router"
 import { useMutation } from "@tanstack/react-query"
 import { Effect } from "effect"
@@ -28,6 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { cn } from "@/lib/utils"
+import { match } from "ts-pattern"
 
 export interface SourceEditorInitialValues {
   type: "local" | "remote"
@@ -64,22 +65,21 @@ type EditorAction =
   | { type: "RESET"; values: SourceEditorInitialValues }
 
 function editorReducer(state: EditorState, action: EditorAction): EditorState {
-  switch (action.type) {
-    case "SET_FIELD":
-      return { ...state, [action.field]: action.value }
-    case "RESET":
-      return {
-        type: action.values.type,
-        name: action.values.name,
-        tags: action.values.tags.join(", "),
-        content: action.values.content,
-        url: action.values.url,
-        fetchMode: action.values.fetchMode,
-        updateInterval: String(action.values.updateInterval),
-      }
-    default:
-      return state
-  }
+  return match(action)
+    .with({ type: "SET_FIELD" }, ({ field, value }) => ({
+      ...state,
+      [field]: value,
+    }))
+    .with({ type: "RESET" }, ({ values }) => ({
+      type: values.type,
+      name: values.name,
+      tags: values.tags.join(", "),
+      content: values.content,
+      url: values.url,
+      fetchMode: values.fetchMode,
+      updateInterval: String(values.updateInterval),
+    }))
+    .exhaustive()
 }
 
 export function SourceEditorPage({
@@ -128,9 +128,11 @@ export function SourceEditorPage({
     onError: () => setFennelPreview(""),
   })
 
+  const fennelPreviewToDisplay =
+    state.type !== "local" || state.content === "" ? "" : fennelPreview
+
   useEffect(() => {
     if (state.type !== "local" || state.content === "") {
-      setFennelPreview("")
       return
     }
 
@@ -284,7 +286,10 @@ export function SourceEditorPage({
           <ResizableHandle withHandle />
 
           <ResizablePanel defaultSize={50} minSize={20}>
-            <PreviewPanel type={state.type} fennelPreview={fennelPreview} />
+            <PreviewPanel
+              type={state.type}
+              fennelPreview={fennelPreviewToDisplay}
+            />
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
@@ -309,7 +314,11 @@ function EditorHeader({
     <div className="bg-background/95 border-b px-4 py-3 backdrop-blur sm:px-8 sm:py-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 sm:gap-4">
-          <Button variant="ghost" size="icon-sm" render={<Link to="/sources" />}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            render={<Link to="/sources" />}
+          >
             <RiArrowLeftLine className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
           <div>
@@ -446,8 +455,14 @@ function RemoteSourceFields({
         >
           Fetch Mode
         </Label>
-        <Select value={fetchMode} onValueChange={(value) => value && setFetchMode(value)}>
-          <SelectTrigger id="fetch-mode" className="font-mono text-[10px] sm:text-xs">
+        <Select
+          value={fetchMode}
+          onValueChange={(value) => value && setFetchMode(value)}
+        >
+          <SelectTrigger
+            id="fetch-mode"
+            className="font-mono text-[10px] sm:text-xs"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

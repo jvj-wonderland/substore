@@ -19,61 +19,59 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { formatError } from "@/lib/effect-utils"
+import { match } from "ts-pattern"
 
 export const Route = createFileRoute("/sources/")({
   component: SourcesIndexPage,
 })
 
 function SourcesIndexPage() {
-  const {
-    data: sources,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const query = useQuery({
     queryKey: ["sources"],
     queryFn: () =>
       Effect.runPromise(API.getSources.pipe(Effect.provide(API.clientLayer))),
   })
 
-  if (isLoading) return <div className="p-8">Loading sources...</div>
-  if (error)
-    return (
+  return match(query)
+    .with({ status: "pending" }, () => (
+      <div className="p-8">Loading sources...</div>
+    ))
+    .with({ status: "error" }, ({ error }) => (
       <div className="text-destructive p-8">
         <h2 className="text-lg font-bold">Error loading sources</h2>
         <pre className="mt-2 text-sm whitespace-pre-wrap">
           {formatError(error)}
         </pre>
       </div>
-    )
-
-  return (
-    <div className="space-y-6 p-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Sources</h2>
-          <p className="text-muted-foreground text-sm">
-            Manage your subscription sources.
-          </p>
+    ))
+    .with({ status: "success" }, ({ data: sources, refetch }) => (
+      <div className="space-y-6 p-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Sources</h2>
+            <p className="text-muted-foreground text-sm">
+              Manage your subscription sources.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" onClick={() => refetch()}>
+              <RiRefreshLine className="h-4 w-4" />
+            </Button>
+            <Button render={<Link to="/sources/new" />}>
+              <RiAddLine className="mr-2 h-4 w-4" />
+              Add Source
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={() => refetch()}>
-            <RiRefreshLine className="h-4 w-4" />
-          </Button>
-          <Button render={<Link to="/sources/new" />}>
-            <RiAddLine className="mr-2 h-4 w-4" />
-            Add Source
-          </Button>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {sources.map((source) => (
+            <SourceCard key={source.id} source={source} />
+          ))}
         </div>
       </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {sources?.map((source) => (
-          <SourceCard key={source.id} source={source} />
-        ))}
-      </div>
-    </div>
-  )
+    ))
+    .exhaustive()
 }
 
 function SourceCard({ source }: { source: API.Source }) {
