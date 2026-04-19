@@ -150,7 +150,7 @@ function SinkCardSkeleton() {
 
 function SinkCard({ sink }: { sink: API.Sink }) {
   const executionApiBase =
-    import.meta.env.VITE_EXECUTION_API_URL || `${window.location.hostname}:8001`
+    window.SUBSTORE_CONFIG?.EXECUTION_URL || `${window.location.hostname}:8001`
   const executionUrl = `http://${encodeURIComponent(sink.name)}:${sink.secret}@${executionApiBase}/`
 
   return (

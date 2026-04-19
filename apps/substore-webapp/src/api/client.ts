@@ -9,7 +9,7 @@ import * as Schemas from "./schemas"
 
 export * from "./schemas"
 
-const API_BASE = import.meta.env.VITE_API_URL || "/api"
+const API_BASE = import.meta.env.VITE_SUBSTORE_API_URL || "/api"
 
 const baseClient = Effect.gen(function* () {
   const client = yield* HttpClient.HttpClient

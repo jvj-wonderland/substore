@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"io/fs"
 	"log"
@@ -73,6 +74,13 @@ func main() {
 	// Combined Mux for Admin Port
 	adminMux := http.NewServeMux()
 	adminMux.Handle("/api/", http.StripPrefix("/api", apiMux))
+
+	// Serve runtime config
+	adminMux.HandleFunc("/config.js", func(w http.ResponseWriter, r *http.Request) {
+		executionUrl := os.Getenv("SUBSTORE_EXECUTION_URL")
+		w.Header().Set("Content-Type", "application/javascript")
+		fmt.Fprintf(w, "window.SUBSTORE_CONFIG = { EXECUTION_URL: %q };\n", executionUrl)
+	})
 
 	// Serve SPA
 	uiFS, err := fs.Sub(substoreserver.UIDist, "dist")

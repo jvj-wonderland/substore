@@ -14,10 +14,15 @@
 ## Deployment & Configuration
 
 - **Environment Variables**:
-  - `SUBSTORE_DB_PATH`: Path to the bbolt database file (default: `~/.local/share/substore/substore.db`).
-  - `SUBSTORE_ADMIN_PORT`: Port for the admin API and SPA (default: `8080`).
-  - `SUBSTORE_EXECUTION_PORT`: Port for the execution API (default: `8001`).
-  - `SUBSTORE_API_TARGET`: (Development) Target for Vite proxying (default: `http://localhost:8080`).
+  - **Production Runtime**:
+    - `SUBSTORE_DB_PATH`: Path to the bbolt database file (default: `~/.local/share/substore/substore.db`).
+    - `SUBSTORE_ADMIN_PORT`: Port for the admin API and SPA (default: `8080`).
+    - `SUBSTORE_EXECUTION_PORT`: Port for the execution API (default: `8001`).
+    - `SUBSTORE_EXECUTION_URL`: Base URL for the execution API exposed to the UI (default: `window.location.hostname + ":8001"`).
+  - **Development**:
+    - `SUBSTORE_DEV_API_TARGET`: Target for Vite proxying to the Go backend (default: `http://localhost:8080`).
+  - **Vite Build-time**:
+    - `VITE_SUBSTORE_API_URL`: Base URL for the admin API in the webapp (default: `/api`).
 - **Security**:
   - Every `SubscriptionSink` MUST have a `Secret`.
   - Sink execution via the Execution API requires **HTTP Basic Authentication**:

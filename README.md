@@ -42,12 +42,15 @@ SubStore can be configured using the following environment variables:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
+| **Production Runtime** | | |
 | `SUBSTORE_DB_PATH` | Path to the `bbolt` database file. | `~/.local/share/substore/substore.db` |
 | `SUBSTORE_ADMIN_PORT` | Port for the admin API and web interface. | `8080` |
 | `SUBSTORE_EXECUTION_PORT` | Dedicated port for executing subscription sinks. | `8001` |
-| `SUBSTORE_API_TARGET` | (Dev only) Target for Vite's API proxying. | `http://localhost:8080` |
-| `VITE_API_URL` | (Webapp) Base URL for the admin API. | `/api` |
-| `VITE_EXECUTION_API_URL`| (Webapp) Base URL for the execution API. | `window.location.protocol + "//" + window.location.hostname + ":8001"` |
+| `SUBSTORE_EXECUTION_URL`| Base URL for the execution API exposed to the UI. | `window.location.hostname + ":8001"` |
+| **Development** | | |
+| `SUBSTORE_DEV_API_TARGET` | Target for Vite's API proxying to the Go backend. | `http://localhost:8080` |
+| **Vite Build-time** | | |
+| `VITE_SUBSTORE_API_URL` | Base URL for the admin API in the webapp. | `/api` |
 
 ## Security
 

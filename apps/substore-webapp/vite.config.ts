@@ -21,11 +21,24 @@ export default defineConfig(({ command }) => ({
       enable: command === "serve",
     }),
     tailwindcss(),
+    {
+      name: "serve-config",
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url === "/config.js") {
+            res.setHeader("Content-Type", "application/javascript")
+            res.end(`window.SUBSTORE_CONFIG = { EXECUTION_URL: "" };`)
+            return
+          }
+          next()
+        })
+      },
+    },
   ],
   server: {
     proxy: {
       "/api": {
-        target: process.env.SUBSTORE_API_TARGET || "http://localhost:8080",
+        target: process.env.SUBSTORE_DEV_API_TARGET || "http://localhost:8080",
         changeOrigin: true,
       },
     },
