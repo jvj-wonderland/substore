@@ -22,21 +22,26 @@ func NewExecMux(storage *storage.Storage, fennel *fennel.Pool) *http.ServeMux {
 		fennel:  fennel,
 	}
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /{name}", h.handleExecuteSink)
+	mux.HandleFunc("GET /", h.handleExecuteSink)
 	return mux
 }
 
 func (h *ExecHandler) handleExecuteSink(w http.ResponseWriter, r *http.Request) {
-	name := r.PathValue("name")
+	// Verify name and secret via Basic Auth
+	name, pass, ok := r.BasicAuth()
+	if !ok {
+		w.Header().Set("WWW-Authenticate", `Basic realm="SubStore Sink"`)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	sink, err := h.storage.GetSink(name)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	// Verify secret via Basic Auth
-	_, pass, ok := r.BasicAuth()
-	if !ok || pass != sink.Secret {
+	if pass != sink.Secret {
 		w.Header().Set("WWW-Authenticate", `Basic realm="SubStore Sink"`)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return

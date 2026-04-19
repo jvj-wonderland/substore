@@ -56,7 +56,7 @@ export function SinkEditorPanel({
               htmlFor="name"
               className="text-muted-foreground text-[10px] font-bold tracking-wider uppercase sm:text-xs"
             >
-              Sink Name (slug)
+              Sink Name
             </Label>
             <Input
               id="name"

@@ -53,7 +53,7 @@ SubStore can be configured using the following environment variables:
 
 Execution of sinks requires **HTTP Basic Authentication**.
 
-- **Username**: `substore`
+- **Username**: The name of the specific sink.
 - **Password**: The unique **Secret Key** generated for each sink.
 
 ## License

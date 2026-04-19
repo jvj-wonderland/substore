@@ -95,14 +95,14 @@ func TestAddSinkAndExecute(t *testing.T) {
 	assert.NotEqual(t, sinkResp.Secret, regenResp.Secret)
 
 	// Execute sink without secret - should fail
-	execReqNoSecret := httptest.NewRequest("GET", "/mysink", nil)
+	execReqNoSecret := httptest.NewRequest("GET", "/", nil)
 	wExecNoSecret := httptest.NewRecorder()
 	execMux.ServeHTTP(wExecNoSecret, execReqNoSecret)
 	assert.Equal(t, http.StatusUnauthorized, wExecNoSecret.Code)
 
 	// Execute sink with correct secret
-	execReq := httptest.NewRequest("GET", "/mysink", nil)
-	execReq.SetBasicAuth("substore", regenResp.Secret)
+	execReq := httptest.NewRequest("GET", "/", nil)
+	execReq.SetBasicAuth("mysink", regenResp.Secret)
 	wExec := httptest.NewRecorder()
 	execMux.ServeHTTP(wExec, execReq)
 

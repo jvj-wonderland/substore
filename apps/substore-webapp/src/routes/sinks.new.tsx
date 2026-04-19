@@ -60,10 +60,6 @@ function AddSinkPage() {
 
   const handleSave = (e: React.MouseEvent | React.SubmitEvent) => {
     e.preventDefault()
-    if (!/^[a-z0-9-]+$/.test(name)) {
-      alert("Name must be a valid slug (lowercase, numbers, and hyphens only)")
-      return
-    }
     addMutation.mutate({
       name,
       secret: "",
