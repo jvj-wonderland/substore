@@ -34,7 +34,7 @@ Build the single production binary with the embedded UI:
 just build
 ```
 
-The resulting binary will be located in `apps/substore-server/cmd/substore-server/substore-server`.
+The resulting binary will be located in `bin/substore-server`.
 
 ## Configuration
 
@@ -43,10 +43,10 @@ SubStore can be configured using the following environment variables:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `SUBSTORE_DB_PATH` | Path to the `bbolt` database file. | `~/.local/share/substore/substore.db` |
-| `SUBSTORE_MANAGEMENT_PORT` | Port for the management API and web interface. | `8080` |
+| `SUBSTORE_ADMIN_PORT` | Port for the admin API and web interface. | `8080` |
 | `SUBSTORE_EXECUTION_PORT` | Dedicated port for executing subscription sinks. | `8001` |
 | `SUBSTORE_API_TARGET` | (Dev only) Target for Vite's API proxying. | `http://localhost:8080` |
-| `VITE_API_URL` | (Webapp) Base URL for the management API. | `/api` |
+| `VITE_API_URL` | (Webapp) Base URL for the admin API. | `/api` |
 | `VITE_EXECUTION_API_URL`| (Webapp) Base URL for the execution API. | `window.location.protocol + "//" + window.location.hostname + ":8001"` |
 
 ## Security

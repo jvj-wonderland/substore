@@ -4,8 +4,8 @@ dev:
 
 # Start the Go API server in development mode
 dev-api:
-    mkdir -p apps/substore-server/cmd/substore-server/dist
-    touch apps/substore-server/cmd/substore-server/dist/index.html
+    mkdir -p apps/substore-server/dist
+    touch apps/substore-server/dist/index.html
     cd apps/substore-server && go run cmd/substore-server/main.go
 
 # Start the Vite development server for the UI
@@ -18,8 +18,8 @@ build-ui:
 
 # Build the complete server with embedded SPA
 build: build-ui
-    rm -rf apps/substore-server/cmd/substore-server/dist
-    cp -r apps/substore-webapp/dist apps/substore-server/cmd/substore-server/dist
+    rm -rf apps/substore-server/dist
+    cp -r apps/substore-webapp/dist apps/substore-server/dist
     mkdir -p bin
     cd apps/substore-server && go build -o ../../bin/substore-server cmd/substore-server/main.go
 

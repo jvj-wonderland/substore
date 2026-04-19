@@ -53,10 +53,10 @@ export const EvalResponse = Schema.Struct({
   error: Schema.optional(Schema.String),
 })
 
-export const JSONToFennelRequest = Schema.Struct({
+export const ConvertFennelRequest = Schema.Struct({
   content: Schema.String,
 })
 
-export const JSONToFennelResponse = Schema.Struct({
+export const ConvertFennelResponse = Schema.Struct({
   fennel: Schema.String,
 })

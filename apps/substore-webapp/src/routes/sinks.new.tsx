@@ -28,7 +28,7 @@ function AddSinkPage() {
   const evalMutation = useMutation({
     mutationFn: (payload: typeof API.EvalRequest.Type) =>
       Effect.runPromise(
-        API.evalScript(payload).pipe(Effect.provide(API.clientLayer))
+        API.evalFennel(payload).pipe(Effect.provide(API.clientLayer))
       ),
     onSuccess: (data) => setEvalResult(data),
     onError: (error) => {

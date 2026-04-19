@@ -20,7 +20,7 @@ RUN go mod download
 
 WORKDIR /src
 COPY apps/substore-server apps/substore-server
-COPY --from=web-build /src/apps/substore-webapp/dist apps/substore-server/cmd/substore-server/dist
+COPY --from=web-build /src/apps/substore-webapp/dist apps/substore-server/dist
 
 ARG TARGETOS=linux
 ARG TARGETARCH

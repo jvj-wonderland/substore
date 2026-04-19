@@ -8,14 +8,14 @@
 - **Data Pipeline**: Powered by **Fennel** (compiled to Lua) running on **Gopher-Lua**.
 - **Storage**: Persistent storage using **bbolt** with **gob** encoding.
 - **Networking**:
-  - **Port 8080**: Management API (`/api/*`) and Static SPA serving (production). Configurable via `SUBSTORE_MANAGEMENT_PORT`.
+  - **Port 8080**: Admin API (`/api/*`) and Static SPA serving (production). Configurable via `SUBSTORE_ADMIN_PORT`.
   - **Port 8001**: Execution API (dedicated port for script execution). Configurable via `SUBSTORE_EXECUTION_PORT`.
 
 ## Deployment & Configuration
 
 - **Environment Variables**:
   - `SUBSTORE_DB_PATH`: Path to the bbolt database file (default: `~/.local/share/substore/substore.db`).
-  - `SUBSTORE_MANAGEMENT_PORT`: Port for the management API and SPA (default: `8080`).
+  - `SUBSTORE_ADMIN_PORT`: Port for the admin API and SPA (default: `8080`).
   - `SUBSTORE_EXECUTION_PORT`: Port for the execution API (default: `8001`).
   - `SUBSTORE_API_TARGET`: (Development) Target for Vite proxying (default: `http://localhost:8080`).
 - **Security**:
@@ -52,7 +52,7 @@
   - `just build`: Builds the production-ready binary with embedded UI.
   - `just format`: Automatically formats all code (Go and TypeScript).
   - `just lint`: Runs all linters and type-checkers.
-- **Git**: Never commit the `apps/substore-server/cmd/substore-server/dist` directory; it is generated during build.
+- **Git**: Never commit the `apps/substore-server/dist` directory; it is generated during build.
 
 ## Critical Lessons & Best Practices
 

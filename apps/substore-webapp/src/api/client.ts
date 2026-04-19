@@ -111,10 +111,10 @@ export const deleteSource = (id: string) =>
     Effect.asVoid
   )
 
-export const evalScript = (payload: typeof Schemas.EvalRequest.Type) =>
+export const evalFennel = (payload: typeof Schemas.EvalRequest.Type) =>
   Effect.gen(function* () {
     const client = yield* baseClient
-    const response = yield* HttpClientRequest.post("/eval").pipe(
+    const response = yield* HttpClientRequest.post("/fennel/eval").pipe(
       HttpClientRequest.bodyJson(payload),
       Effect.flatMap(client.execute)
     )
@@ -124,15 +124,16 @@ export const evalScript = (payload: typeof Schemas.EvalRequest.Type) =>
   })
 
 export const transformToFennel = (
-  payload: typeof Schemas.JSONToFennelRequest.Type
+  payload: typeof Schemas.ConvertFennelRequest.Type
 ) =>
   Effect.gen(function* () {
     const client = yield* baseClient
-    const response = yield* HttpClientRequest.post(
-      "/utils/json-to-fennel"
-    ).pipe(HttpClientRequest.bodyJson(payload), Effect.flatMap(client.execute))
+    const response = yield* HttpClientRequest.post("/fennel/convert").pipe(
+      HttpClientRequest.bodyJson(payload),
+      Effect.flatMap(client.execute)
+    )
     return yield* HttpClientResponse.schemaBodyJson(
-      Schemas.JSONToFennelResponse
+      Schemas.ConvertFennelResponse
     )(response)
   })
 
