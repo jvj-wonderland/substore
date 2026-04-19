@@ -7,6 +7,7 @@ import { useState } from "react"
 import { formatError } from "@/lib/effect-utils"
 import { SinkEditorPage } from "@/components/sinks/sink-editor-page"
 import { match } from "ts-pattern"
+import { toast } from "sonner"
 
 export const Route = createFileRoute("/sinks/$sinkId/edit")({
   component: EditSinkPage,
@@ -84,6 +85,24 @@ function EditSinkPage() {
     },
   })
 
+  const regenerateSecretMutation = useMutation({
+    mutationFn: () =>
+      Effect.runPromise(
+        API.regenerateSinkSecret(sinkId).pipe(Effect.provide(API.clientLayer))
+      ),
+    onSuccess: (sink) => {
+      setSecret(sink.secret)
+      queryClient.invalidateQueries({ queryKey: ["sinks"] })
+      queryClient.invalidateQueries({ queryKey: ["sinks", sinkId] })
+      toast.success("Secret regenerated")
+    },
+    onError: (error) => {
+      toast.error("Failed to regenerate secret", {
+        description: formatError(error),
+      })
+    },
+  })
+
   const handleRun = () => {
     evalMutation.mutate({ script, sink_format: format })
   }
@@ -92,7 +111,7 @@ function EditSinkPage() {
     e.preventDefault()
     updateMutation.mutate({
       name: sinkId,
-      secret,
+      secret: "",
       sink_format: format,
       pipeline_script: script,
     })
@@ -145,7 +164,6 @@ function EditSinkPage() {
           name={sinkId}
           nameDisabled
           secret={secret}
-          setSecret={setSecret}
           format={format}
           setFormat={setFormat}
           script={script}
@@ -155,6 +173,8 @@ function EditSinkPage() {
           isSavePending={updateMutation.isPending}
           onRun={handleRun}
           onSave={handleSave}
+          onRegenerateSecret={() => regenerateSecretMutation.mutate()}
+          isRegenerateSecretPending={regenerateSecretMutation.isPending}
           onDelete={() => deleteMutation.mutate()}
         />
       )

@@ -35,7 +35,6 @@ interface SinkEditorPageProps {
   setName?: (name: string) => void
   nameDisabled?: boolean
   secret: string
-  setSecret: (secret: string) => void
   format: API.SinkFormat
   setFormat: (format: API.SinkFormat) => void
   script: string
@@ -45,6 +44,8 @@ interface SinkEditorPageProps {
   isSavePending: boolean
   onRun: () => void
   onSave: (e: React.MouseEvent | React.SubmitEvent) => void
+  onRegenerateSecret?: () => void
+  isRegenerateSecretPending?: boolean
   onDelete?: () => void
 }
 
@@ -55,7 +56,6 @@ export function SinkEditorPage({
   setName,
   nameDisabled,
   secret,
-  setSecret,
   format,
   setFormat,
   script,
@@ -65,6 +65,8 @@ export function SinkEditorPage({
   isSavePending,
   onRun,
   onSave,
+  onRegenerateSecret,
+  isRegenerateSecretPending,
   onDelete,
 }: SinkEditorPageProps) {
   const isDesktop = useMediaQuery("(min-width: 768px)")
@@ -98,7 +100,8 @@ export function SinkEditorPage({
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete the sink "{name}". This action cannot be undone.
+                    This will permanently delete the sink "{name}". This action
+                    cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -144,11 +147,12 @@ export function SinkEditorPage({
               setName={setName}
               nameDisabled={nameDisabled}
               secret={secret}
-              setSecret={setSecret}
               format={format}
               setFormat={setFormat}
               script={script}
               setScript={setScript}
+              onRegenerateSecret={onRegenerateSecret}
+              isRegenerateSecretPending={isRegenerateSecretPending}
             />
           </ResizablePanel>
 

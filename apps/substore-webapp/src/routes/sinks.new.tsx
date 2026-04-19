@@ -14,9 +14,6 @@ function AddSinkPage() {
   const queryClient = useQueryClient()
 
   const [name, setName] = useState("")
-  const [secret, setSecret] = useState(() =>
-    crypto.randomUUID().replace(/-/g, "")
-  )
   const [format, setFormat] = useState<API.SinkFormat>("json")
   const [script, setScript] = useState("*sources*")
   const [evalResult, setEvalResult] = useState<
@@ -64,7 +61,7 @@ function AddSinkPage() {
     }
     addMutation.mutate({
       name,
-      secret,
+      secret: "",
       sink_format: format,
       pipeline_script: script,
     })
@@ -80,8 +77,7 @@ function AddSinkPage() {
       }
       name={name}
       setName={setName}
-      secret={secret}
-      setSecret={setSecret}
+      secret=""
       format={format}
       setFormat={setFormat}
       script={script}

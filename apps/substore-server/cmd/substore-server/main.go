@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"embed"
-	"encoding/hex"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -89,6 +89,7 @@ func main() {
 	apiMux.HandleFunc("GET /sinks", s.handleGetSinks)
 	apiMux.HandleFunc("PUT /sinks/{name}", s.handleUpdateSink)
 	apiMux.HandleFunc("PATCH /sinks/{name}", s.handleUpdateSink)
+	apiMux.HandleFunc("POST /sinks/{name}/secret", s.handleRegenerateSinkSecret)
 	apiMux.HandleFunc("DELETE /sinks/{name}", s.handleDeleteSink)
 
 	apiMux.HandleFunc("POST /eval", s.handleEval)
@@ -327,12 +328,12 @@ func (s *Server) handleJSONToFennel(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(JSONToFennelResponse{Fennel: fennelStr})
 }
 
-func generateSecret() string {
-	b := make([]byte, 32)
+func generateSecret() (string, error) {
+	b := make([]byte, 48)
 	if _, err := rand.Read(b); err != nil {
-		return uuid.New().String()
+		return "", err
 	}
-	return hex.EncodeToString(b)
+	return base64.RawURLEncoding.EncodeToString(b), nil
 }
 
 func (s *Server) handleDeleteSource(w http.ResponseWriter, r *http.Request) {
@@ -362,7 +363,12 @@ func (s *Server) handleAddSink(w http.ResponseWriter, r *http.Request) {
 
 	secret := req.Secret
 	if secret == "" {
-		secret = generateSecret()
+		var err error
+		secret, err = generateSecret()
+		if err != nil {
+			http.Error(w, "failed to generate sink secret", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	sink := &substoreserver.SubscriptionSink{
@@ -401,13 +407,42 @@ func (s *Server) handleUpdateSink(w http.ResponseWriter, r *http.Request) {
 	if req.Secret != "" {
 		sink.Secret = req.Secret
 	} else if sink.Secret == "" {
-		sink.Secret = generateSecret()
+		var err error
+		sink.Secret, err = generateSecret()
+		if err != nil {
+			http.Error(w, "failed to generate sink secret", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	if err := s.applySinkPayload(sink, &req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	if err := s.storage.AddSink(sink); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(s.toSinkResponse(sink))
+}
+
+func (s *Server) handleRegenerateSinkSecret(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	sink, err := s.storage.GetSink(name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	secret, err := generateSecret()
+	if err != nil {
+		http.Error(w, "failed to generate sink secret", http.StatusInternalServerError)
+		return
+	}
+	sink.Secret = secret
 
 	if err := s.storage.AddSink(sink); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -3,6 +3,7 @@ import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools"
 import { RouterProvider, createRouter } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
+import { Toaster } from "@/components/ui/sonner"
 import { routeTree } from "./routeTree.gen"
 
 const queryClient = new QueryClient()
@@ -24,6 +25,7 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
+      <Toaster richColors />
       <TanStackDevtools
         plugins={[
           {

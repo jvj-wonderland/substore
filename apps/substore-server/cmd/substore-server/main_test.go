@@ -123,6 +123,8 @@ func TestAddSinkAndExecute(t *testing.T) {
 	var sinkResp SinkResponse
 	json.Unmarshal(wSink.Body.Bytes(), &sinkResp)
 	assert.NotEmpty(t, sinkResp.Secret)
+	assert.Len(t, sinkResp.Secret, 64)
+	assert.Regexp(t, `^[A-Za-z0-9_-]+$`, sinkResp.Secret)
 
 	// Update sink
 	sinkUpdateReq := AddSubscriptionSinkRequest{
@@ -138,6 +140,19 @@ func TestAddSinkAndExecute(t *testing.T) {
 	var upResp SinkResponse
 	json.Unmarshal(upW.Body.Bytes(), &upResp)
 	assert.Equal(t, sinkResp.Secret, upResp.Secret, "Secret should be preserved on update")
+
+	// Regenerate sink secret on the server
+	regenReq := httptest.NewRequest("POST", "/api/sinks/mysink/secret", nil)
+	regenReq.SetPathValue("name", "mysink")
+	regenW := httptest.NewRecorder()
+	s.handleRegenerateSinkSecret(regenW, regenReq)
+	assert.Equal(t, http.StatusOK, regenW.Code)
+
+	var regenResp SinkResponse
+	json.Unmarshal(regenW.Body.Bytes(), &regenResp)
+	assert.NotEqual(t, sinkResp.Secret, regenResp.Secret)
+	assert.Len(t, regenResp.Secret, 64)
+	assert.Regexp(t, `^[A-Za-z0-9_-]+$`, regenResp.Secret)
 
 	// Execute sink without secret - should fail
 	execReqNoSecret := httptest.NewRequest("GET", "/mysink", nil)
@@ -156,7 +171,7 @@ func TestAddSinkAndExecute(t *testing.T) {
 
 	// Execute sink with correct secret
 	execReq := httptest.NewRequest("GET", "/mysink", nil)
-	execReq.SetBasicAuth("substore", sinkResp.Secret)
+	execReq.SetBasicAuth("substore", regenResp.Secret)
 	execReq.SetPathValue("name", "mysink")
 	wExec := httptest.NewRecorder()
 	s.handleExecuteSink(wExec, execReq)

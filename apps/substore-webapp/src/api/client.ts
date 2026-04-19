@@ -88,15 +88,26 @@ export const updateSink = (
     return yield* HttpClientResponse.schemaBodyJson(Schemas.Sink)(response)
   })
 
+export const regenerateSinkSecret = (name: string) =>
+  Effect.gen(function* () {
+    const client = yield* baseClient
+    const response = yield* client.post(`/sinks/${name}/secret`)
+    return yield* HttpClientResponse.schemaBodyJson(Schemas.Sink)(response)
+  })
+
 export const deleteSink = (name: string) =>
   baseClient.pipe(
-    Effect.flatMap((client) => client.execute(HttpClientRequest.del(`/sinks/${name}`))),
+    Effect.flatMap((client) =>
+      client.execute(HttpClientRequest.del(`/sinks/${name}`))
+    ),
     Effect.asVoid
   )
 
 export const deleteSource = (id: string) =>
   baseClient.pipe(
-    Effect.flatMap((client) => client.execute(HttpClientRequest.del(`/sources/${id}`))),
+    Effect.flatMap((client) =>
+      client.execute(HttpClientRequest.del(`/sources/${id}`))
+    ),
     Effect.asVoid
   )
 
