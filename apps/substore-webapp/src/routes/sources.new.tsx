@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Effect } from "effect"
 import * as API from "@/api/client"
+import { AnimatedRoute } from "@/components/page-transition"
 import {
   SourceEditorPage,
   type SourceEditorInitialValues,
@@ -37,14 +38,16 @@ function AddSourcePage() {
   }
 
   return (
-    <SourceEditorPage
-      title="New Source"
-      subtitle="Creation Mode"
-      submitLabel="Save"
-      submitPendingLabel="Saving..."
-      initialValues={initialValues}
-      isSubmitting={addMutation.isPending}
-      onSubmit={(payload) => addMutation.mutate(payload)}
-    />
+    <AnimatedRoute className="overflow-hidden">
+      <SourceEditorPage
+        title="New Source"
+        subtitle="Creation Mode"
+        submitLabel="Save"
+        submitPendingLabel="Saving..."
+        initialValues={initialValues}
+        isSubmitting={addMutation.isPending}
+        onSubmit={(payload) => addMutation.mutate(payload)}
+      />
+    </AnimatedRoute>
   )
 }

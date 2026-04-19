@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Effect } from "effect"
 import * as API from "@/api/client"
+import { AnimatedRoute } from "@/components/page-transition"
 import { useState } from "react"
 import { SinkEditorPage } from "@/components/sinks/sink-editor-page"
 
@@ -68,25 +69,27 @@ function AddSinkPage() {
   }
 
   return (
-    <SinkEditorPage
-      title="New Sink"
-      subtitle={
-        <p className="text-muted-foreground text-[8px] font-semibold tracking-widest uppercase sm:text-[10px]">
-          Creation Mode
-        </p>
-      }
-      name={name}
-      setName={setName}
-      secret=""
-      format={format}
-      setFormat={setFormat}
-      script={script}
-      setScript={setScript}
-      evalResult={evalResult}
-      isEvalPending={evalMutation.isPending}
-      isSavePending={addMutation.isPending}
-      onRun={handleRun}
-      onSave={handleSave}
-    />
+    <AnimatedRoute className="overflow-hidden">
+      <SinkEditorPage
+        title="New Sink"
+        subtitle={
+          <p className="text-muted-foreground text-[8px] font-semibold tracking-widest uppercase sm:text-[10px]">
+            Creation Mode
+          </p>
+        }
+        name={name}
+        setName={setName}
+        secret=""
+        format={format}
+        setFormat={setFormat}
+        script={script}
+        setScript={setScript}
+        evalResult={evalResult}
+        isEvalPending={evalMutation.isPending}
+        isSavePending={addMutation.isPending}
+        onRun={handleRun}
+        onSave={handleSave}
+      />
+    </AnimatedRoute>
   )
 }

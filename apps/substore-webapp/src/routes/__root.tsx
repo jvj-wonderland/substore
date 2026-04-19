@@ -1,6 +1,7 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router"
+import { createRootRoute } from "@tanstack/react-router"
 import { AppSidebar } from "@/components/sidebar"
 import { MobileNav } from "@/components/mobile-nav"
+import { RouteTransitionOutlet } from "@/components/page-transition"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
 export const Route = createRootRoute({
@@ -11,7 +12,7 @@ export const Route = createRootRoute({
         <SidebarInset className="min-h-0 overflow-hidden">
           <MobileNav />
           <main className="min-h-0 flex-1 overflow-hidden">
-            <Outlet />
+            <RouteTransitionOutlet />
           </main>
         </SidebarInset>
       </div>

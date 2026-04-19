@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query"
 import { Effect } from "effect"
 import * as API from "@/api/client"
+import { AnimatedRoute } from "@/components/page-transition"
 import {
   SourceEditorPage,
   type SourceEditorInitialValues,
@@ -50,36 +51,40 @@ function EditSourcePage() {
     },
   })
 
-  return match(sourceQuery)
-    .with({ status: "pending" }, () => <div className="p-8">Loading...</div>)
-    .with({ status: "error" }, () => (
-      <div className="p-8">Error loading source</div>
-    ))
-    .with({ status: "success" }, ({ data: source }) => {
-      if (!source) return <div className="p-8">Source not found</div>
+  return (
+    <AnimatedRoute className="overflow-hidden">
+      {match(sourceQuery)
+        .with({ status: "pending" }, () => <div className="p-8">Loading...</div>)
+        .with({ status: "error" }, () => (
+          <div className="p-8">Error loading source</div>
+        ))
+        .with({ status: "success" }, ({ data: source }) => {
+          if (!source) return <div className="p-8">Source not found</div>
 
-      const initialValues: SourceEditorInitialValues = {
-        type: source.type,
-        name: source.name,
-        tags: source.tags,
-        content: source.content,
-        url: source.url ?? "",
-        fetchMode: source.fetch_mode ?? "server",
-        updateInterval: source.update_interval ?? 3600,
-      }
+          const initialValues: SourceEditorInitialValues = {
+            type: source.type,
+            name: source.name,
+            tags: source.tags,
+            content: source.content,
+            url: source.url ?? "",
+            fetchMode: source.fetch_mode ?? "server",
+            updateInterval: source.update_interval ?? 3600,
+          }
 
-      return (
-        <SourceEditorPage
-          title="Edit Source"
-          subtitle={`Editing: ${source.name}`}
-          submitLabel="Save"
-          submitPendingLabel="Saving..."
-          initialValues={initialValues}
-          isSubmitting={updateMutation.isPending}
-          onSubmit={(payload) => updateMutation.mutate(payload)}
-          onDelete={() => deleteMutation.mutate()}
-        />
-      )
-    })
-    .exhaustive()
+          return (
+            <SourceEditorPage
+              title="Edit Source"
+              subtitle={`Editing: ${source.name}`}
+              submitLabel="Save"
+              submitPendingLabel="Saving..."
+              initialValues={initialValues}
+              isSubmitting={updateMutation.isPending}
+              onSubmit={(payload) => updateMutation.mutate(payload)}
+              onDelete={() => deleteMutation.mutate()}
+            />
+          )
+        })
+        .exhaustive()}
+    </AnimatedRoute>
+  )
 }

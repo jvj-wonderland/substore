@@ -1,5 +1,13 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
+import {
+  AnimatedRoute,
+  RouteTransitionOutlet,
+} from "@/components/page-transition"
 
 export const Route = createFileRoute("/sources")({
-  component: () => <Outlet />,
+  component: () => (
+    <AnimatedRoute className="overflow-hidden">
+      <RouteTransitionOutlet />
+    </AnimatedRoute>
+  ),
 })

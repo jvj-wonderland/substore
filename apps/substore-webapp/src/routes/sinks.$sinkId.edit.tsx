@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Effect } from "effect"
 import * as API from "@/api/client"
 import { Button } from "@/components/ui/button"
+import { AnimatedRoute } from "@/components/page-transition"
 import { useState } from "react"
 import { formatError } from "@/lib/effect-utils"
 import { SinkEditorPage } from "@/components/sinks/sink-editor-page"
@@ -117,32 +118,20 @@ function EditSinkPage() {
     })
   }
 
-  return match(sinkQuery)
-    .with({ status: "pending" }, () => (
-      <div className="text-muted-foreground animate-pulse p-8 text-center text-xs font-medium tracking-widest uppercase sm:text-sm">
-        Loading Sink Data...
-      </div>
-    ))
-    .with({ status: "error" }, ({ error }) => (
-      <div className="text-destructive bg-destructive/5 border-destructive/20 m-8 rounded-lg border p-8">
-        <h2 className="text-lg font-bold">Error Loading Sink</h2>
-        <pre className="mt-2 text-[10px] sm:text-xs">
-          {error ? formatError(error) : "Sink not found"}
-        </pre>
-        <Button
-          variant="outline"
-          className="mt-4"
-          render={<Link to="/sinks" />}
-        >
-          Back to Sinks
-        </Button>
-      </div>
-    ))
-    .with({ status: "success" }, ({ data: sink }) => {
-      if (!sink)
-        return (
+  return (
+    <AnimatedRoute className="overflow-hidden">
+      {match(sinkQuery)
+        .with({ status: "pending" }, () => (
+          <div className="text-muted-foreground animate-pulse p-8 text-center text-xs font-medium tracking-widest uppercase sm:text-sm">
+            Loading Sink Data...
+          </div>
+        ))
+        .with({ status: "error" }, ({ error }) => (
           <div className="text-destructive bg-destructive/5 border-destructive/20 m-8 rounded-lg border p-8">
-            <h2 className="text-lg font-bold">Sink Not Found</h2>
+            <h2 className="text-lg font-bold">Error Loading Sink</h2>
+            <pre className="mt-2 text-[10px] sm:text-xs">
+              {error ? formatError(error) : "Sink not found"}
+            </pre>
             <Button
               variant="outline"
               className="mt-4"
@@ -151,33 +140,49 @@ function EditSinkPage() {
               Back to Sinks
             </Button>
           </div>
-        )
+        ))
+        .with({ status: "success" }, ({ data: sink }) => {
+          if (!sink)
+            return (
+              <div className="text-destructive bg-destructive/5 border-destructive/20 m-8 rounded-lg border p-8">
+                <h2 className="text-lg font-bold">Sink Not Found</h2>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  render={<Link to="/sinks" />}
+                >
+                  Back to Sinks
+                </Button>
+              </div>
+            )
 
-      return (
-        <SinkEditorPage
-          title="Edit Sink"
-          subtitle={
-            <p className="text-primary text-[8px] font-bold tracking-widest uppercase sm:text-[10px]">
-              Editing: {sinkId}
-            </p>
-          }
-          name={sinkId}
-          nameDisabled
-          secret={secret}
-          format={format}
-          setFormat={setFormat}
-          script={script}
-          setScript={setScript}
-          evalResult={evalResult}
-          isEvalPending={evalMutation.isPending}
-          isSavePending={updateMutation.isPending}
-          onRun={handleRun}
-          onSave={handleSave}
-          onRegenerateSecret={() => regenerateSecretMutation.mutate()}
-          isRegenerateSecretPending={regenerateSecretMutation.isPending}
-          onDelete={() => deleteMutation.mutate()}
-        />
-      )
-    })
-    .exhaustive()
+          return (
+            <SinkEditorPage
+              title="Edit Sink"
+              subtitle={
+                <p className="text-primary text-[8px] font-bold tracking-widest uppercase sm:text-[10px]">
+                  Editing: {sinkId}
+                </p>
+              }
+              name={sinkId}
+              nameDisabled
+              secret={secret}
+              format={format}
+              setFormat={setFormat}
+              script={script}
+              setScript={setScript}
+              evalResult={evalResult}
+              isEvalPending={evalMutation.isPending}
+              isSavePending={updateMutation.isPending}
+              onRun={handleRun}
+              onSave={handleSave}
+              onRegenerateSecret={() => regenerateSecretMutation.mutate()}
+              isRegenerateSecretPending={regenerateSecretMutation.isPending}
+              onDelete={() => deleteMutation.mutate()}
+            />
+          )
+        })
+        .exhaustive()}
+    </AnimatedRoute>
+  )
 }

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Effect } from "effect"
 import * as API from "@/api/client"
 import { Button } from "@/components/ui/button"
+import { AnimatedRoute } from "@/components/page-transition"
 import { RiArrowLeftLine, RiEditLine } from "@remixicon/react"
 import { Label } from "@/components/ui/label"
 import { CodeBlock } from "@/components/code-block"
@@ -43,16 +44,18 @@ function ViewSourcePage() {
     enabled: !!sourceQuery.data?.content,
   })
 
-  return match(sourceQuery)
-    .with({ status: "pending" }, () => <div className="p-8">Loading...</div>)
-    .with({ status: "error" }, () => (
-      <div className="p-8">Error loading source</div>
-    ))
-    .with({ status: "success" }, ({ data: source }) => {
-      if (!source) return <div className="p-8">Source not found</div>
+  return (
+    <AnimatedRoute className="overflow-hidden">
+      {match(sourceQuery)
+        .with({ status: "pending" }, () => <div className="p-8">Loading...</div>)
+        .with({ status: "error" }, () => (
+          <div className="p-8">Error loading source</div>
+        ))
+        .with({ status: "success" }, ({ data: source }) => {
+          if (!source) return <div className="p-8">Source not found</div>
 
-      return (
-        <div className="bg-background flex h-full flex-col overflow-hidden">
+          return (
+            <div className="bg-background flex h-full flex-col overflow-hidden">
           <div className="bg-background/95 z-10 flex shrink-0 items-center justify-between border-b px-4 py-3 backdrop-blur sm:px-8 sm:py-4">
             <div className="flex items-center gap-2 sm:gap-4">
               <Button
@@ -224,8 +227,10 @@ function ViewSourcePage() {
               </ResizablePanel>
             </ResizablePanelGroup>
           </div>
-        </div>
-      )
-    })
-    .exhaustive()
+            </div>
+          )
+        })
+        .exhaustive()}
+    </AnimatedRoute>
+  )
 }
