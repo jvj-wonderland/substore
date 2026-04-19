@@ -16,6 +16,8 @@ const router = createRouter({
   },
 })
 
+const enableDevtools = import.meta.env.DEV
+
 declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router
@@ -31,18 +33,20 @@ export function App() {
         </MotionConfig>
       </LazyMotion>
       <Toaster richColors />
-      <TanStackDevtools
-        plugins={[
-          {
-            name: "Router",
-            render: () => <TanStackRouterDevtoolsPanel router={router} />,
-          },
-          {
-            name: "Query",
-            render: () => <ReactQueryDevtoolsPanel client={queryClient} />,
-          },
-        ]}
-      />
+      {enableDevtools ? (
+        <TanStackDevtools
+          plugins={[
+            {
+              name: "Router",
+              render: () => <TanStackRouterDevtoolsPanel router={router} />,
+            },
+            {
+              name: "Query",
+              render: () => <ReactQueryDevtoolsPanel client={queryClient} />,
+            },
+          ]}
+        />
+      ) : null}
     </QueryClientProvider>
   )
 }

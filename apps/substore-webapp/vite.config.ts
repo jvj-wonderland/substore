@@ -7,7 +7,7 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite"
 import reactScan from "@react-scan/vite-plugin-react-scan"
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     tanstackRouter({
       target: "react",
@@ -18,7 +18,7 @@ export default defineConfig({
       presets: [reactCompilerPreset({ target: "19" })],
     }),
     reactScan({
-      enable: true,
+      enable: command === "serve",
     }),
     tailwindcss(),
   ],
@@ -35,4 +35,4 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-})
+}))
