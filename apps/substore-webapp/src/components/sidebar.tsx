@@ -7,6 +7,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
 
@@ -22,20 +24,29 @@ export function AppSidebar() {
   ]
 
   return (
-    <UISidebar className="border-r" collapsible="offcanvas">
-      <SidebarHeader className="border-b p-6">
-        <h1 className="text-xl font-bold tracking-tight">SubStore</h1>
+    <UISidebar className="border-r" collapsible="icon">
+      <SidebarHeader className="h-14 border-b p-2">
+        <div className="flex min-w-0 items-center gap-2 group-data-[collapsible=icon]:justify-center">
+          <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-md group-data-[collapsible=icon]:hidden">
+            <RiDatabase2Line className="size-4" />
+          </div>
+          <h1 className="min-w-0 flex-1 truncate text-sm font-bold tracking-tight group-data-[collapsible=icon]:hidden">
+            SubStore
+          </h1>
+          <SidebarTrigger className="size-8 shrink-0" />
+        </div>
       </SidebarHeader>
-      <SidebarContent className="p-4">
+      <SidebarContent className="p-2">
         <SidebarMenu>
           {links.map((link) => (
             <SidebarMenuItem key={link.to}>
               <SidebarMenuButton
                 render={<Link to={link.to} />}
+                tooltip={link.label}
                 isActive={
                   pathname === link.to || pathname.startsWith(`${link.to}/`)
                 }
-                className="gap-3 rounded-md px-3 py-2 text-sm [&_svg]:size-5"
+                className="h-9 gap-3 rounded-md px-3 text-sm [&_svg]:size-5"
                 onClick={() => {
                   if (isMobile) {
                     setOpenMobile(false)
@@ -49,6 +60,7 @@ export function AppSidebar() {
           ))}
         </SidebarMenu>
       </SidebarContent>
+      <SidebarRail />
     </UISidebar>
   )
 }
