@@ -13,7 +13,13 @@ import (
 )
 
 func setupTestServer(t *testing.T) (*Server, string) {
-	dbFile := "test.db"
+	tmpfile, err := os.CreateTemp("", "substore-test-*.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmpfile.Close()
+	dbFile := tmpfile.Name()
+
 	s, err := NewServer(dbFile)
 	if err != nil {
 		t.Fatal(err)
