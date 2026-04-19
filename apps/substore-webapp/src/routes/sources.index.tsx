@@ -66,11 +66,25 @@ function SourcesIndexPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {sources.map((source) => (
-                <SourceCard key={source.id} source={source} />
-              ))}
-            </div>
+            {sources.length === 0 ? (
+              <div className="bg-muted/20 text-muted-foreground flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-12">
+                <p className="text-sm">No sources created yet.</p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  render={<Link to="/sources/new" />}
+                >
+                  <RiAddLine className="mr-2 h-4 w-4" />
+                  Create your first source
+                </Button>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {sources.map((source) => (
+                  <SourceCard key={source.id} source={source} />
+                ))}
+              </div>
+            )}
           </div>
         ))
         .exhaustive()}
