@@ -37,9 +37,7 @@ function SourcesIndexPage() {
   return (
     <AnimatedRoute>
       {match(query)
-        .with({ status: "pending" }, () => (
-          <SourcesPageSkeleton />
-        ))
+        .with({ status: "pending" }, () => <SourcesPageSkeleton />)
         .with({ status: "error" }, ({ error }) => (
           <div className="text-destructive p-8">
             <h2 className="text-lg font-bold">Error loading sources</h2>

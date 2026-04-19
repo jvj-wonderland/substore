@@ -37,9 +37,7 @@ function SinksIndexPage() {
   return (
     <AnimatedRoute>
       {match(query)
-        .with({ status: "pending" }, () => (
-          <SinksPageSkeleton />
-        ))
+        .with({ status: "pending" }, () => <SinksPageSkeleton />)
         .with({ status: "error" }, ({ error }) => (
           <div className="text-destructive bg-destructive/5 border-destructive/20 m-8 rounded-lg border p-8">
             <h2 className="flex items-center gap-2 text-lg font-bold">

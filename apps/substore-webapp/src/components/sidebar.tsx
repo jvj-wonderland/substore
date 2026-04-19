@@ -1,8 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router"
-import {
-  RiDatabase2Line,
-  RiSettings4Line,
-} from "@remixicon/react"
+import { RiDatabase2Line, RiSettings4Line } from "@remixicon/react"
 import {
   Sidebar as UISidebar,
   SidebarContent,

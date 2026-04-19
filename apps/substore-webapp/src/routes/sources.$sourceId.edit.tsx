@@ -54,7 +54,9 @@ function EditSourcePage() {
   return (
     <AnimatedRoute className="overflow-hidden">
       {match(sourceQuery)
-        .with({ status: "pending" }, () => <div className="p-8">Loading...</div>)
+        .with({ status: "pending" }, () => (
+          <div className="p-8">Loading...</div>
+        ))
         .with({ status: "error" }, () => (
           <div className="p-8">Error loading source</div>
         ))

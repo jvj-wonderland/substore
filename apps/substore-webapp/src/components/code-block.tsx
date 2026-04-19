@@ -31,7 +31,8 @@ function makeShikiBackgroundTransparent(html: string) {
     .replace(/<code([^>]*?)style=""/g, "<code$1")
 }
 
-let highlighterPromise: Promise<HighlighterGeneric<string, string>> | null = null
+let highlighterPromise: Promise<HighlighterGeneric<string, string>> | null =
+  null
 
 function getHighlighter(): Promise<HighlighterGeneric<string, string>> {
   if (highlighterPromise) return highlighterPromise

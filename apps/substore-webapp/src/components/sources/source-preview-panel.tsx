@@ -6,7 +6,10 @@ interface SourcePreviewPanelProps {
   fennelPreview: string
 }
 
-export function SourcePreviewPanel({ type, fennelPreview }: SourcePreviewPanelProps) {
+export function SourcePreviewPanel({
+  type,
+  fennelPreview,
+}: SourcePreviewPanelProps) {
   return (
     <div className="bg-muted/30 h-full overflow-y-auto p-4 sm:p-6">
       <div className="flex h-full flex-col gap-2">
