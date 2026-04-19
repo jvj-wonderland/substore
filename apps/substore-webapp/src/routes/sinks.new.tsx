@@ -5,8 +5,12 @@ import * as API from "@/api/client"
 import { AnimatedRoute } from "@/components/page-transition"
 import { useState } from "react"
 import { SinkEditorPage } from "@/components/sinks/sink-editor-page"
+import { pageTitle } from "@/lib/page-title"
 
 export const Route = createFileRoute("/sinks/new")({
+  head: () => ({
+    meta: [{ title: pageTitle("New Sink") }],
+  }),
   component: AddSinkPage,
 })
 

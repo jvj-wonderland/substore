@@ -7,8 +7,12 @@ import {
   SourceEditorPage,
   type SourceEditorInitialValues,
 } from "@/components/sources/source-editor-page"
+import { pageTitle } from "@/lib/page-title"
 
 export const Route = createFileRoute("/sources/new")({
+  head: () => ({
+    meta: [{ title: pageTitle("New Source") }],
+  }),
   component: AddSourcePage,
 })
 

@@ -1,0 +1,33 @@
+import { cn } from "@/lib/utils"
+
+export function Logo({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 64 64"
+      className={cn("size-full", className)}
+    >
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#4f46e5" />
+          <stop offset="100%" stop-color="#312e81" />
+        </linearGradient>
+        <linearGradient id="s-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ffffff" />
+          <stop offset="100%" stop-color="#a5b4fc" />
+        </linearGradient>
+      </defs>
+      <rect width="64" height="64" rx="14" fill="url(#bg)" />
+      <path
+        d="M42 16H28c-4.42 0-8 3.58-8 8s3.58 8 8 8h8c4.42 0 8 3.58 8 8s-3.58 8-8 8H22"
+        fill="none"
+        stroke="url(#s-grad)"
+        stroke-width="8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <circle cx="42" cy="16" r="6" fill="#ffffff" />
+      <circle cx="22" cy="48" r="6" fill="#a5b4fc" />
+    </svg>
+  )
+}

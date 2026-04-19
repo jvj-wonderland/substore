@@ -8,8 +8,12 @@ import {
   type SourceEditorInitialValues,
 } from "@/components/sources/source-editor-page"
 import { match } from "ts-pattern"
+import { pageTitle } from "@/lib/page-title"
 
 export const Route = createFileRoute("/sources/$sourceId/edit")({
+  head: ({ params }) => ({
+    meta: [{ title: pageTitle(`Edit Source ${params.sourceId}`) }],
+  }),
   component: EditSourcePage,
 })
 

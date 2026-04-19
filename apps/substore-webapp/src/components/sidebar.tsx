@@ -11,6 +11,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { Logo } from "@/components/logo"
 
 export function AppSidebar() {
   const pathname = useRouterState({
@@ -27,8 +28,8 @@ export function AppSidebar() {
     <UISidebar className="border-r" collapsible="icon">
       <SidebarHeader className="h-14 border-b p-2">
         <div className="flex min-w-0 items-center gap-2 group-data-[collapsible=icon]:justify-center">
-          <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-md group-data-[collapsible=icon]:hidden">
-            <RiDatabase2Line className="size-4" />
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-md group-data-[collapsible=icon]:hidden">
+            <Logo className="size-6" />
           </div>
           <h1 className="min-w-0 flex-1 truncate text-sm font-bold tracking-tight group-data-[collapsible=icon]:hidden">
             SubStore

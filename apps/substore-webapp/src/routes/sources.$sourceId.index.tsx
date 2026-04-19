@@ -15,9 +15,13 @@ import {
 } from "@/components/ui/resizable"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { cn } from "@/lib/utils"
+import { pageTitle } from "@/lib/page-title"
 import { match } from "ts-pattern"
 
 export const Route = createFileRoute("/sources/$sourceId/")({
+  head: ({ params }) => ({
+    meta: [{ title: pageTitle(`Source ${params.sourceId}`) }],
+  }),
   component: ViewSourcePage,
 })
 

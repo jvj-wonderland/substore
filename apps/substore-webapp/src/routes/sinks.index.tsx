@@ -21,9 +21,13 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatError } from "@/lib/effect-utils"
+import { pageTitle } from "@/lib/page-title"
 import { match } from "ts-pattern"
 
 export const Route = createFileRoute("/sinks/")({
+  head: () => ({
+    meta: [{ title: pageTitle("Sinks") }],
+  }),
   component: SinksIndexPage,
 })
 

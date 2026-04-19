@@ -9,8 +9,12 @@ import { formatError } from "@/lib/effect-utils"
 import { SinkEditorPage } from "@/components/sinks/sink-editor-page"
 import { match } from "ts-pattern"
 import { toast } from "sonner"
+import { pageTitle } from "@/lib/page-title"
 
 export const Route = createFileRoute("/sinks/$sinkId/edit")({
+  head: ({ params }) => ({
+    meta: [{ title: pageTitle(`Edit Sink ${params.sinkId}`) }],
+  }),
   component: EditSinkPage,
 })
 
