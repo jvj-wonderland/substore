@@ -44,8 +44,14 @@
 - **Dialog State Lifecycle**: When reusing a Dialog for Add/Edit, the parent MUST reset the selection state on close. The child should sync its local state via `useEffect` triggered by the `open` prop transition to ensure a fresh UI state.
 - **Strict Type Guards**: Always guard `Select` `onValueChange` and similar callbacks against `null` or `undefined` when using them as state setters in TypeScript.
 - **Effect Context**: Ensure all Effect dependencies are resolved (type `never`) before calling runners like `runPromise` in utility functions.
-- **TanStack Router Generation**: When adding new routes, the route tree might not auto-update. Manually trigger generation using: `bunx @tanstack/router-cli generate --routes-directory src/routes --generated-route-tree src/routeTree.gen.ts` from the webapp root.
+- **TanStack Router Generation**: This project uses the **TanStack Router Vite plugin** (`@tanstack/router-plugin/vite`). Route generation and code splitting are handled automatically during development. You should no longer need to run the `router-cli` manually.
 - **BaseUI Button Composition**: Strictly follow the project mandate of using the `render` prop for `Button` composition (e.g., `render={<Link to="..." />}`) instead of `asChild`. Using `asChild` will cause TypeScript errors and layout inconsistencies.
 - **EDN Syntax Highlighting**: For Fennel EDN previews, use the native `fennel` language support in Shiki.
 - **React Compiler**: This project uses the **React Compiler**. Do NOT add manual memoization hooks like `useMemo`, `useCallback`, or `React.memo` unless explicitly needed for non-performance reasons. The compiler handles optimization automatically.
 - **React 19 Form Submission**: `React.FormEvent<HTMLFormElement>` is deprecated in React 19. Use `React.SubmitEvent` instead for `onSubmit` handlers, and cast `e.currentTarget` to `HTMLFormElement` when passing to `new FormData()`. Prefer React 19 **Actions** (`action` prop) for new forms where possible.
+
+## Session Reflections & Mandates
+
+- **Monorepo Dependency Management**: All development-time tools (Vite plugins, linters, compilers) MUST be installed in the **root** `package.json` to maintain a clean workspace and shared tooling. Application-specific `package.json` files should only contain runtime dependencies.
+- **API Verification**: When integrating new libraries (e.g., `react-scan`, `@tanstack/router-plugin`), DO NOT assume property names or export patterns. Rigorously verify the library's types or source code (e.g., using `grep` or reading `d.ts` files) to ensure correct usage (e.g., `enable` vs `enabled`) and avoid deprecated exports.
+- **TanStack Ecosystem**: Always prefer the modern, non-deprecated exports (e.g., `tanstackRouter` instead of `TanStackRouterVite`).

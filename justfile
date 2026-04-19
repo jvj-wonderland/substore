@@ -32,3 +32,8 @@ format:
 test:
     cd apps/substore-server && go test ./...
     cd apps/substore-webapp && bun run typecheck
+
+# Lint all code
+lint:
+    cd apps/substore-server && go vet ./...
+    bun run lint
