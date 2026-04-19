@@ -35,7 +35,7 @@ func (h *ExecHandler) handleExecuteSink(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	sink, err := h.storage.GetSink(name)
+	sink, err := h.storage.GetSinkByName(name)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

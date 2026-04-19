@@ -75,7 +75,7 @@ func TestAddSinkAndExecute(t *testing.T) {
 		SinkFormat: substoreserver.SinkFormatYAML,
 	}
 	sinkUpBytes, _ := json.Marshal(sinkUpdateReq)
-	upReq := httptest.NewRequest("PATCH", "/sinks/mysink", bytes.NewReader(sinkUpBytes))
+	upReq := httptest.NewRequest("PATCH", "/sinks/"+sinkResp.ID, bytes.NewReader(sinkUpBytes))
 	upW := httptest.NewRecorder()
 	adminMux.ServeHTTP(upW, upReq)
 	assert.Equal(t, http.StatusOK, upW.Code)
@@ -85,7 +85,7 @@ func TestAddSinkAndExecute(t *testing.T) {
 	assert.Equal(t, sinkResp.Secret, upResp.Secret, "Secret should be preserved on update")
 
 	// Regenerate sink secret
-	regenReq := httptest.NewRequest("POST", "/sinks/mysink/secret", nil)
+	regenReq := httptest.NewRequest("POST", "/sinks/"+sinkResp.ID+"/secret", nil)
 	regenW := httptest.NewRecorder()
 	adminMux.ServeHTTP(regenW, regenReq)
 	assert.Equal(t, http.StatusOK, regenW.Code)

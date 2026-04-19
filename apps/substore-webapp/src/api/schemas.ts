@@ -20,6 +20,7 @@ export const Source = Schema.Struct({
 export type Source = typeof Source.Type
 
 export const Sink = Schema.Struct({
+  id: Schema.String,
   name: Schema.String,
   secret: Schema.String,
   sink_format: SinkFormat,
@@ -27,10 +28,33 @@ export const Sink = Schema.Struct({
 })
 export type Sink = typeof Sink.Type
 
-export const AddSourcePayload = Schema.Struct({
-  type: Schema.Literal("local", "remote"),
-  payload: Schema.Any, // Raw message in Go
+export const LocalSourcePayload = Schema.Struct({
+  name: Schema.String,
+  tags: Schema.Array(Schema.String),
+  content: Schema.String,
 })
+export type LocalSourcePayload = typeof LocalSourcePayload.Type
+
+export const RemoteSourcePayload = Schema.Struct({
+  name: Schema.String,
+  tags: Schema.Array(Schema.String),
+  url: Schema.String,
+  fetch_mode: FetchMode,
+  update_interval: Schema.Number,
+})
+export type RemoteSourcePayload = typeof RemoteSourcePayload.Type
+
+export const AddSourcePayload = Schema.Union(
+  Schema.Struct({
+    type: Schema.Literal("local"),
+    payload: LocalSourcePayload,
+  }),
+  Schema.Struct({
+    type: Schema.Literal("remote"),
+    payload: RemoteSourcePayload,
+  })
+)
+export type AddSourcePayload = typeof AddSourcePayload.Type
 
 export const AddSinkPayload = Schema.Struct({
   name: Schema.String,

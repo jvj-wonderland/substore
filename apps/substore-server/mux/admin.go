@@ -36,10 +36,10 @@ func NewAdminMux(storage *storage.Storage, fennel *fennel.Pool) *http.ServeMux {
 
 	mux.HandleFunc("POST /sinks", h.handleAddSink)
 	mux.HandleFunc("GET /sinks", h.handleGetSinks)
-	mux.HandleFunc("PUT /sinks/{name}", h.handleUpdateSink)
-	mux.HandleFunc("PATCH /sinks/{name}", h.handleUpdateSink)
-	mux.HandleFunc("POST /sinks/{name}/secret", h.handleRegenerateSinkSecret)
-	mux.HandleFunc("DELETE /sinks/{name}", h.handleDeleteSink)
+	mux.HandleFunc("PUT /sinks/{id}", h.handleUpdateSink)
+	mux.HandleFunc("PATCH /sinks/{id}", h.handleUpdateSink)
+	mux.HandleFunc("POST /sinks/{id}/secret", h.handleRegenerateSinkSecret)
+	mux.HandleFunc("DELETE /sinks/{id}", h.handleDeleteSink)
 
 	mux.HandleFunc("POST /fennel/eval", h.handleEval)
 	mux.HandleFunc("POST /fennel/convert", h.handleConvertFennel)
@@ -238,8 +238,8 @@ func (h *AdminHandler) handleDeleteSource(w http.ResponseWriter, r *http.Request
 }
 
 func (h *AdminHandler) handleDeleteSink(w http.ResponseWriter, r *http.Request) {
-	name := r.PathValue("name")
-	if err := h.storage.DeleteSink(name); err != nil {
+	id := r.PathValue("id")
+	if err := h.storage.DeleteSink(id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -264,6 +264,7 @@ func (h *AdminHandler) handleAddSink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sink := &substoreserver.SubscriptionSink{
+		ID:     uuid.New().String(),
 		Name:   req.Name,
 		Secret: secret,
 	}
@@ -283,8 +284,8 @@ func (h *AdminHandler) handleAddSink(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AdminHandler) handleUpdateSink(w http.ResponseWriter, r *http.Request) {
-	name := r.PathValue("name")
-	sink, err := h.storage.GetSink(name)
+	id := r.PathValue("id")
+	sink, err := h.storage.GetSink(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -294,6 +295,10 @@ func (h *AdminHandler) handleUpdateSink(w http.ResponseWriter, r *http.Request) 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	if req.Name != "" {
+		sink.Name = req.Name
 	}
 
 	if req.Secret != "" {
@@ -322,8 +327,8 @@ func (h *AdminHandler) handleUpdateSink(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *AdminHandler) handleRegenerateSinkSecret(w http.ResponseWriter, r *http.Request) {
-	name := r.PathValue("name")
-	sink, err := h.storage.GetSink(name)
+	id := r.PathValue("id")
+	sink, err := h.storage.GetSink(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -346,9 +351,7 @@ func (h *AdminHandler) handleRegenerateSinkSecret(w http.ResponseWriter, r *http
 }
 
 func (h *AdminHandler) applySinkPayload(sink *substoreserver.SubscriptionSink, req *AddSubscriptionSinkRequest) error {
-	if req.SinkFormat != 0 {
-		sink.SinkFormat = req.SinkFormat
-	}
+	sink.SinkFormat = req.SinkFormat
 	if req.PipelineScript != "" {
 		L := h.fennel.Get()
 		defer h.fennel.Put(L)
@@ -520,6 +523,7 @@ func (h *AdminHandler) toSourceResponse(source *storage.Source) SourceResponse {
 
 func (h *AdminHandler) toSinkResponse(sink *substoreserver.SubscriptionSink) SinkResponse {
 	return SinkResponse{
+		ID:             sink.ID,
 		Name:           sink.Name,
 		Secret:         sink.Secret,
 		SinkFormat:     sink.SinkFormat,
@@ -566,6 +570,7 @@ type SourceResponse struct {
 }
 
 type SinkResponse struct {
+	ID             string                    `json:"id"`
 	Name           string                    `json:"name"`
 	Secret         string                    `json:"secret"`
 	SinkFormat     substoreserver.SinkFormat `json:"sink_format"`

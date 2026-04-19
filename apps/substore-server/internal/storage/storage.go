@@ -108,17 +108,17 @@ func (s *Storage) AddSink(sink *substoreserver.SubscriptionSink) error {
 		if err := gob.NewEncoder(&buf).Encode(sink); err != nil {
 			return err
 		}
-		return b.Put([]byte(sink.Name), buf.Bytes())
+		return b.Put([]byte(sink.ID), buf.Bytes())
 	})
 }
 
-func (s *Storage) GetSink(name string) (*substoreserver.SubscriptionSink, error) {
+func (s *Storage) GetSink(id string) (*substoreserver.SubscriptionSink, error) {
 	var sink substoreserver.SubscriptionSink
 	err := s.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bucketSinks)
-		v := b.Get([]byte(name))
+		v := b.Get([]byte(id))
 		if v == nil {
-			return fmt.Errorf("sink not found: %s", name)
+			return fmt.Errorf("sink not found: %s", id)
 		}
 		return gob.NewDecoder(bytes.NewReader(v)).Decode(&sink)
 	})
@@ -126,6 +126,31 @@ func (s *Storage) GetSink(name string) (*substoreserver.SubscriptionSink, error)
 		return nil, err
 	}
 	return &sink, nil
+}
+
+func (s *Storage) GetSinkByName(name string) (*substoreserver.SubscriptionSink, error) {
+	var found *substoreserver.SubscriptionSink
+	err := s.db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket(bucketSinks)
+		return b.ForEach(func(k, v []byte) error {
+			var sink substoreserver.SubscriptionSink
+			if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&sink); err != nil {
+				return err
+			}
+			if sink.Name == name {
+				found = &sink
+				return nil
+			}
+			return nil
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	if found == nil {
+		return nil, fmt.Errorf("sink not found with name: %s", name)
+	}
+	return found, nil
 }
 
 func (s *Storage) GetAllSinks() ([]*substoreserver.SubscriptionSink, error) {
@@ -154,9 +179,9 @@ func (s *Storage) DeleteSource(id string) error {
 	})
 }
 
-func (s *Storage) DeleteSink(name string) error {
+func (s *Storage) DeleteSink(id string) error {
 	return s.db.Update(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bucketSinks)
-		return b.Delete([]byte(name))
+		return b.Delete([]byte(id))
 	})
 }

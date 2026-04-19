@@ -55,6 +55,7 @@ func TestSinkStorage(t *testing.T) {
 	defer teardownTestDB(s, path)
 
 	sink := &substoreserver.SubscriptionSink{
+		ID:             "test-id",
 		Name:           "mysink",
 		SinkFormat:     substoreserver.SinkFormatJSON,
 		PipelineScript: "script",
@@ -63,10 +64,15 @@ func TestSinkStorage(t *testing.T) {
 	err := s.AddSink(sink)
 	assert.NoError(t, err)
 
-	got, err := s.GetSink("mysink")
+	got, err := s.GetSink("test-id")
 	assert.NoError(t, err)
 	assert.Equal(t, sink.SinkFormat, got.SinkFormat)
 	assert.Equal(t, sink.PipelineScript, got.PipelineScript)
+
+	// Test GetSinkByName
+	gotByName, err := s.GetSinkByName("mysink")
+	assert.NoError(t, err)
+	assert.Equal(t, "test-id", gotByName.ID)
 
 	sinks, err := s.GetAllSinks()
 	assert.NoError(t, err)

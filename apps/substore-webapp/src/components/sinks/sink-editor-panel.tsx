@@ -63,7 +63,7 @@ export function SinkEditorPanel({
               value={name}
               onChange={(e) => setName?.(e.target.value)}
               disabled={nameDisabled}
-              placeholder="my-awesome-sink"
+              placeholder="My Sink"
               required
               className="bg-background h-8 font-mono text-[10px] shadow-none focus-visible:ring-1 sm:h-9 sm:text-xs"
             />

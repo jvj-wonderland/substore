@@ -23,6 +23,7 @@ function EditSinkPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
+  const [name, setName] = useState("")
   const [format, setFormat] = useState<API.SinkFormat>("json")
   const [secret, setSecret] = useState("")
   const [script, setScript] = useState("")
@@ -35,7 +36,7 @@ function EditSinkPage() {
     queryFn: () =>
       Effect.runPromise(
         API.getSinks.pipe(
-          Effect.map((sinks) => sinks.find((s) => s.name === sinkId)),
+          Effect.map((sinks) => sinks.find((s) => s.id === sinkId)),
           Effect.provide(API.clientLayer)
         )
       ),
@@ -45,6 +46,7 @@ function EditSinkPage() {
   const [prevSink, setPrevSink] = useState<typeof API.Sink.Type | null>(null)
   if (sinkQuery.data && sinkQuery.data !== prevSink) {
     setPrevSink(sinkQuery.data)
+    setName(sinkQuery.data.name)
     setFormat(sinkQuery.data.sink_format)
     setSecret(sinkQuery.data.secret)
     setScript(sinkQuery.data.pipeline_script)
@@ -115,7 +117,7 @@ function EditSinkPage() {
   const handleSave = (e: React.MouseEvent | React.SubmitEvent) => {
     e.preventDefault()
     updateMutation.mutate({
-      name: sinkId,
+      name,
       secret: "",
       sink_format: format,
       pipeline_script: script,
@@ -165,11 +167,11 @@ function EditSinkPage() {
               title="Edit Sink"
               subtitle={
                 <p className="text-primary text-[8px] font-bold tracking-widest uppercase sm:text-[10px]">
-                  Editing: {sinkId}
+                  Editing ID: {sinkId}
                 </p>
               }
-              name={sinkId}
-              nameDisabled
+              name={name}
+              setName={setName}
               secret={secret}
               format={format}
               setFormat={setFormat}

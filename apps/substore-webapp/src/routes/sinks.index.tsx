@@ -87,7 +87,7 @@ function SinksIndexPage() {
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {sinks.map((sink) => (
-                  <SinkCard key={sink.name} sink={sink} />
+                  <SinkCard key={sink.id} sink={sink} />
                 ))}
               </div>
             )}
@@ -189,7 +189,7 @@ function SinkCard({ sink }: { sink: API.Sink }) {
           variant="outline"
           size="sm"
           render={
-            <Link to="/sinks/$sinkId/edit" params={{ sinkId: sink.name }} />
+            <Link to="/sinks/$sinkId/edit" params={{ sinkId: sink.id }} />
           }
         >
           <RiEditLine className="mr-1 h-3 w-3" />

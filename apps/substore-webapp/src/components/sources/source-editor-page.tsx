@@ -30,7 +30,7 @@ export interface SourceEditorInitialValues {
   tags: readonly string[]
   content: string
   url: string
-  fetchMode: string
+  fetchMode: API.FetchMode
   updateInterval: number
 }
 
@@ -163,7 +163,7 @@ export function SourceEditorPage({
               name: state.name,
               tags: normalizedTags,
               url: state.url,
-              fetch_mode: state.fetchMode,
+              fetch_mode: state.fetchMode as API.FetchMode,
               update_interval: Number.parseInt(state.updateInterval, 10),
             },
           }

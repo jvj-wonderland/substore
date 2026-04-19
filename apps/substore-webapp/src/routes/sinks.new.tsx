@@ -6,6 +6,8 @@ import { AnimatedRoute } from "@/components/page-transition"
 import { useState } from "react"
 import { SinkEditorPage } from "@/components/sinks/sink-editor-page"
 import { pageTitle } from "@/lib/page-title"
+import { toast } from "sonner"
+import { formatError } from "@/lib/effect-utils"
 
 export const Route = createFileRoute("/sinks/new")({
   head: () => ({
@@ -51,6 +53,12 @@ function AddSinkPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sinks"] })
       navigate({ to: "/sinks" })
+      toast.success("Sink created")
+    },
+    onError: (error) => {
+      toast.error("Failed to create sink", {
+        description: formatError(error),
+      })
     },
   })
 

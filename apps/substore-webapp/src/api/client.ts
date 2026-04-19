@@ -76,29 +76,29 @@ export const addSink = (payload: typeof Schemas.AddSinkPayload.Type) =>
   })
 
 export const updateSink = (
-  name: string,
+  id: string,
   payload: typeof Schemas.AddSinkPayload.Type
 ) =>
   Effect.gen(function* () {
     const client = yield* baseClient
-    const response = yield* HttpClientRequest.patch(`/sinks/${name}`).pipe(
+    const response = yield* HttpClientRequest.patch(`/sinks/${id}`).pipe(
       HttpClientRequest.bodyJson(payload),
       Effect.flatMap(client.execute)
     )
     return yield* HttpClientResponse.schemaBodyJson(Schemas.Sink)(response)
   })
 
-export const regenerateSinkSecret = (name: string) =>
+export const regenerateSinkSecret = (id: string) =>
   Effect.gen(function* () {
     const client = yield* baseClient
-    const response = yield* client.post(`/sinks/${name}/secret`)
+    const response = yield* client.post(`/sinks/${id}/secret`)
     return yield* HttpClientResponse.schemaBodyJson(Schemas.Sink)(response)
   })
 
-export const deleteSink = (name: string) =>
+export const deleteSink = (id: string) =>
   baseClient.pipe(
     Effect.flatMap((client) =>
-      client.execute(HttpClientRequest.del(`/sinks/${name}`))
+      client.execute(HttpClientRequest.del(`/sinks/${id}`))
     ),
     Effect.asVoid
   )

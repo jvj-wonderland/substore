@@ -102,6 +102,7 @@ type LocalSubscriptionSource struct {
 }
 
 type SubscriptionSink struct {
+	ID                     string
 	Name                   string
 	Secret                 string
 	SinkFormat             SinkFormat
