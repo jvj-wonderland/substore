@@ -79,6 +79,11 @@ function EditSinkPage() {
       queryClient.invalidateQueries({ queryKey: ["sinks"] })
       navigate({ to: "/sinks" })
     },
+    onError: (error) => {
+      toast.error("Failed to update sink", {
+        description: formatError(error),
+      })
+    },
   })
 
   const deleteMutation = useMutation({

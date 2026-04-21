@@ -82,6 +82,11 @@ func (h *AdminHandler) handleAddSource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := h.ensureSourceNameAvailable(source.Name, source.ID); err != nil {
+		h.writeNameConflictError(w, err)
+		return
+	}
+
 	if err := h.storage.AddSource(source); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -107,6 +112,11 @@ func (h *AdminHandler) handleUpdateSource(w http.ResponseWriter, r *http.Request
 
 	if err := h.applySourcePayload(source, req.Type, req.Payload); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.ensureSourceNameAvailable(source.Name, source.ID); err != nil {
+		h.writeNameConflictError(w, err)
 		return
 	}
 
@@ -274,6 +284,11 @@ func (h *AdminHandler) handleAddSink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := h.ensureSinkNameAvailable(sink.Name, sink.ID); err != nil {
+		h.writeNameConflictError(w, err)
+		return
+	}
+
 	if err := h.storage.AddSink(sink); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -314,6 +329,11 @@ func (h *AdminHandler) handleUpdateSink(w http.ResponseWriter, r *http.Request) 
 
 	if err := h.applySinkPayload(sink, &req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.ensureSinkNameAvailable(sink.Name, sink.ID); err != nil {
+		h.writeNameConflictError(w, err)
 		return
 	}
 
@@ -362,6 +382,51 @@ func (h *AdminHandler) applySinkPayload(sink *substoreserver.SubscriptionSink, r
 		}
 		sink.PipelineScript = req.PipelineScript
 		sink.CompiledPipelineScript = compiled
+	}
+	return nil
+}
+
+type nameConflictError struct {
+	resource string
+	name     string
+}
+
+func (e *nameConflictError) Error() string {
+	return fmt.Sprintf("%s name already exists: %s", e.resource, e.name)
+}
+
+func (h *AdminHandler) writeNameConflictError(w http.ResponseWriter, err error) {
+	if _, ok := err.(*nameConflictError); ok {
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
+	http.Error(w, err.Error(), http.StatusInternalServerError)
+}
+
+func (h *AdminHandler) ensureSourceNameAvailable(name string, currentID string) error {
+	sources, err := h.storage.GetAllSources()
+	if err != nil {
+		return err
+	}
+
+	for _, source := range sources {
+		if source.ID != currentID && source.Name == name {
+			return &nameConflictError{resource: "source", name: name}
+		}
+	}
+	return nil
+}
+
+func (h *AdminHandler) ensureSinkNameAvailable(name string, currentID string) error {
+	sinks, err := h.storage.GetAllSinks()
+	if err != nil {
+		return err
+	}
+
+	for _, sink := range sinks {
+		if sink.ID != currentID && sink.Name == name {
+			return &nameConflictError{resource: "sink", name: name}
+		}
 	}
 	return nil
 }

@@ -7,8 +7,10 @@ import {
   SourceEditorPage,
   type SourceEditorInitialValues,
 } from "@/components/sources/source-editor-page"
+import { formatError } from "@/lib/effect-utils"
 import { match } from "ts-pattern"
 import { pageTitle } from "@/lib/page-title"
+import { toast } from "sonner"
 
 export const Route = createFileRoute("/sources/$sourceId/edit")({
   head: ({ params }) => ({
@@ -41,6 +43,11 @@ function EditSourcePage() {
       queryClient.invalidateQueries({ queryKey: ["sources"] })
       queryClient.invalidateQueries({ queryKey: ["sources", sourceId] })
       navigate({ to: "/sources" })
+    },
+    onError: (error) => {
+      toast.error("Failed to update source", {
+        description: formatError(error),
+      })
     },
   })
 

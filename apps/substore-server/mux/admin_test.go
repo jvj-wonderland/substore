@@ -12,6 +12,7 @@ import (
 	"github.com/jvj-wonderland/substore/server/internal/fennel"
 	"github.com/jvj-wonderland/substore/server/internal/storage"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func setupTestMux(t *testing.T) (*http.ServeMux, *storage.Storage, string) {
@@ -88,6 +89,154 @@ func TestAddLocalSource(t *testing.T) {
 	json.Unmarshal(upW.Body.Bytes(), &upResp)
 	assert.Equal(t, "test-local-updated", upResp.Name)
 	assert.Equal(t, "test-content", upResp.Content) // should remain unchanged if not provided
+}
+
+func TestSourceNameConflicts(t *testing.T) {
+	m, s, dbFile := setupTestMux(t)
+	defer teardownTestMux(s, dbFile)
+
+	firstID := addLocalSourceForTest(t, m, "first-source")
+	secondID := addLocalSourceForTest(t, m, "second-source")
+
+	duplicatePayload := LocalSubscriptionSourcePayload{
+		SubscriptionSourcePayload: SubscriptionSourcePayload{
+			Name: "first-source",
+		},
+		Content: "duplicate-content",
+	}
+	duplicateBytes, err := json.Marshal(duplicatePayload)
+	require.NoError(t, err)
+	duplicateReqBody := AddSubscriptionSourceRequest{
+		Type:    "local",
+		Payload: duplicateBytes,
+	}
+	duplicateReqBytes, err := json.Marshal(duplicateReqBody)
+	require.NoError(t, err)
+
+	duplicateReq := httptest.NewRequest("POST", "/sources", bytes.NewReader(duplicateReqBytes))
+	duplicateW := httptest.NewRecorder()
+	m.ServeHTTP(duplicateW, duplicateReq)
+
+	assert.Equal(t, http.StatusConflict, duplicateW.Code)
+	assert.Contains(t, duplicateW.Body.String(), "source name already exists: first-source")
+
+	renamePayload := LocalSubscriptionSourcePayload{
+		SubscriptionSourcePayload: SubscriptionSourcePayload{
+			Name: "first-source",
+		},
+	}
+	renameBytes, err := json.Marshal(renamePayload)
+	require.NoError(t, err)
+	renameReqBody := AddSubscriptionSourceRequest{
+		Type:    "local",
+		Payload: renameBytes,
+	}
+	renameReqBytes, err := json.Marshal(renameReqBody)
+	require.NoError(t, err)
+
+	renameReq := httptest.NewRequest("PATCH", "/sources/"+secondID, bytes.NewReader(renameReqBytes))
+	renameW := httptest.NewRecorder()
+	m.ServeHTTP(renameW, renameReq)
+
+	assert.Equal(t, http.StatusConflict, renameW.Code)
+
+	keepNameReq := httptest.NewRequest("PATCH", "/sources/"+firstID, bytes.NewReader(renameReqBytes))
+	keepNameW := httptest.NewRecorder()
+	m.ServeHTTP(keepNameW, keepNameReq)
+
+	assert.Equal(t, http.StatusOK, keepNameW.Code)
+}
+
+func TestSinkNameConflicts(t *testing.T) {
+	m, s, dbFile := setupTestMux(t)
+	defer teardownTestMux(s, dbFile)
+
+	firstID := addSinkForTest(t, m, "first-sink")
+	secondID := addSinkForTest(t, m, "second-sink")
+
+	duplicateReq := AddSubscriptionSinkRequest{
+		Name:           "first-sink",
+		SinkFormat:     substoreserver.SinkFormatJSON,
+		PipelineScript: "*sources*",
+	}
+	duplicateBytes, err := json.Marshal(duplicateReq)
+	require.NoError(t, err)
+
+	duplicateHTTPReq := httptest.NewRequest("POST", "/sinks", bytes.NewReader(duplicateBytes))
+	duplicateW := httptest.NewRecorder()
+	m.ServeHTTP(duplicateW, duplicateHTTPReq)
+
+	assert.Equal(t, http.StatusConflict, duplicateW.Code)
+	assert.Contains(t, duplicateW.Body.String(), "sink name already exists: first-sink")
+
+	renameReq := AddSubscriptionSinkRequest{
+		Name:           "first-sink",
+		SinkFormat:     substoreserver.SinkFormatJSON,
+		PipelineScript: "*sources*",
+	}
+	renameBytes, err := json.Marshal(renameReq)
+	require.NoError(t, err)
+
+	renameHTTPReq := httptest.NewRequest("PATCH", "/sinks/"+secondID, bytes.NewReader(renameBytes))
+	renameW := httptest.NewRecorder()
+	m.ServeHTTP(renameW, renameHTTPReq)
+
+	assert.Equal(t, http.StatusConflict, renameW.Code)
+
+	keepNameHTTPReq := httptest.NewRequest("PATCH", "/sinks/"+firstID, bytes.NewReader(renameBytes))
+	keepNameW := httptest.NewRecorder()
+	m.ServeHTTP(keepNameW, keepNameHTTPReq)
+
+	assert.Equal(t, http.StatusOK, keepNameW.Code)
+}
+
+func addLocalSourceForTest(t *testing.T, m *http.ServeMux, name string) string {
+	t.Helper()
+
+	payload := LocalSubscriptionSourcePayload{
+		SubscriptionSourcePayload: SubscriptionSourcePayload{
+			Name: name,
+		},
+		Content: "test-content",
+	}
+	payloadBytes, err := json.Marshal(payload)
+	require.NoError(t, err)
+	reqBody := AddSubscriptionSourceRequest{
+		Type:    "local",
+		Payload: payloadBytes,
+	}
+	reqBytes, err := json.Marshal(reqBody)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest("POST", "/sources", bytes.NewReader(reqBytes))
+	w := httptest.NewRecorder()
+	m.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var resp SourceResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	return resp.ID
+}
+
+func addSinkForTest(t *testing.T, m *http.ServeMux, name string) string {
+	t.Helper()
+
+	reqBody := AddSubscriptionSinkRequest{
+		Name:           name,
+		SinkFormat:     substoreserver.SinkFormatJSON,
+		PipelineScript: "*sources*",
+	}
+	reqBytes, err := json.Marshal(reqBody)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest("POST", "/sinks", bytes.NewReader(reqBytes))
+	w := httptest.NewRecorder()
+	m.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var resp SinkResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	return resp.ID
 }
 
 func TestClientFetchTasks(t *testing.T) {

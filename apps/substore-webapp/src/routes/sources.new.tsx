@@ -7,7 +7,9 @@ import {
   SourceEditorPage,
   type SourceEditorInitialValues,
 } from "@/components/sources/source-editor-page"
+import { formatError } from "@/lib/effect-utils"
 import { pageTitle } from "@/lib/page-title"
+import { toast } from "sonner"
 
 export const Route = createFileRoute("/sources/new")({
   head: () => ({
@@ -28,6 +30,11 @@ function AddSourcePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sources"] })
       navigate({ to: "/sources" })
+    },
+    onError: (error) => {
+      toast.error("Failed to create source", {
+        description: formatError(error),
+      })
     },
   })
 
