@@ -15,7 +15,7 @@ SubStore is a powerful, self-hosted subscription management and transformation s
 ### Installation
 
 ```bash
-bun install
+pnpm install
 ```
 
 ### Development

@@ -1,22 +1,17 @@
 {
   "name": "substore",
-  "module": "index.ts",
   "type": "module",
   "private": true,
   "scripts": {
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx}\""
   },
-  "workspaces": [
-    "apps/*"
-  ],
   "devDependencies": {
     "@effect/language-service": "^0.84.3",
     "@eslint/js": "^10.0.1",
     "@react-scan/vite-plugin-react-scan": "^0.2.3",
     "@rolldown/plugin-babel": "^0.2.2",
     "@tanstack/router-plugin": "^1.167.22",
-    "@types/bun": "latest",
     "@types/node": "^25.5.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

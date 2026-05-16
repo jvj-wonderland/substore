@@ -10,11 +10,11 @@ dev-api:
 
 # Start the Vite development server for the UI
 dev-ui:
-    cd apps/substore-webapp && bun run dev
+    pnpm --filter substore-webapp dev
 
 # Build the Web SPA
 build-ui:
-    cd apps/substore-webapp && bun run build
+    pnpm --filter substore-webapp build
 
 # Build the complete server with embedded SPA
 build: build-ui
@@ -25,7 +25,7 @@ build: build-ui
 
 # Format all code
 format:
-    bun run format
+    pnpm format
     cd apps/substore-server && go fmt ./...
 
 # Run all tests
@@ -35,5 +35,5 @@ test:
 # Lint all code
 lint:
     cd apps/substore-server && go vet ./...
-    bun run lint
-    cd apps/substore-webapp && bun run typecheck
+    pnpm lint
+    pnpm --filter substore-webapp typecheck

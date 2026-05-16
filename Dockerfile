@@ -1,15 +1,17 @@
 # syntax=docker/dockerfile:1.7
 
-FROM oven/bun:1-debian AS web-build
+FROM node:22-bookworm-slim AS web-build
 WORKDIR /src
 
-COPY package.json bun.lock ./
+RUN corepack enable pnpm
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/substore-webapp/package.json apps/substore-webapp/package.json
-RUN bun install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 COPY tsconfig.json eslint.config.js .prettierrc ./
 COPY apps/substore-webapp apps/substore-webapp
-RUN bun run --cwd apps/substore-webapp build
+RUN pnpm --filter substore-webapp build
 
 FROM golang:1.26.1-bookworm AS server-build
 WORKDIR /src
